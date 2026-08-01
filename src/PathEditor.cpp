@@ -32,6 +32,8 @@ INT_PTR CALLBACK DialogProc(HWND hWnd, UINT, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
 {
+	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATORS));
+
 	HWND hWnd = CreateDialogParam( hInstance, MAKEINTRESOURCE(IDD_PATHEDITOR_DIALOG), 0,
 		DialogProc, reinterpret_cast<LPARAM>(hInstance));
 	ShowWindow( hWnd, nShowCmd);
@@ -39,7 +41,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 	MSG msg;
 	while(GetMessage(&msg, 0, 0, 0) == TRUE)
 	{
-		if(IsDialogMessage(hWnd, &msg) == FALSE)
+		if(!TranslateAccelerator(hWnd, hAccelTable, &msg) && !IsDialogMessage(hWnd, &msg))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -57,6 +59,10 @@ INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return theDialog.OnInitDialog( reinterpret_cast<HINSTANCE>(lParam), hWnd);
 	case WM_NOTIFY:
 		return theDialog.OnNotify( reinterpret_cast<LPNMHDR>(lParam));
+	case WM_GETMINMAXINFO:
+		return theDialog.OnMinMaxInfo(LPMINMAXINFO(lParam));
+	case WM_SIZE:
+		return theDialog.OnSize(LOWORD(lParam), HIWORD(lParam));
 	case WM_COMMAND:
 		return theDialog.OnCommand(uMsg, wParam, lParam);
 	case WM_CLOSE:

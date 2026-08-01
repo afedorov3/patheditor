@@ -37,20 +37,36 @@ private:
 	HIMAGELIST m_hImageList;
 
 	bool m_bIsAdmin;
+
+	CDlgCtrl m_okBtn, m_cancelBtn, m_gainPrivBtn, m_applyBtn, m_refreshBtn;
+	CDlgCtrl m_usrGroup, m_usrAddBtn, m_usrEditBtn, m_usrRemoveBtn, m_usrUpBtn, m_usrDownBtn;
+	CDlgCtrl m_sysGroup, m_sysAddBtn, m_sysEditBtn, m_sysRemoveBtn, m_sysUpBtn, m_sysDownBtn;
 	CPathListCtrl m_usrListCtrl;
 	CPathListCtrl m_sysListCtrl;
 
 	std::vector<HICON> m_ButtonIcons;
 
+	constexpr static UINT MARGIN           = 10;
+	constexpr static UINT LIST_MARGIN      = 20;
+	constexpr static UINT EDIT_BTN_POS     = 45;
+	constexpr static UINT EDIT_BTN_SPASING = 10;
+	constexpr static UINT MOVE_BTN_POS     = 90;
+	constexpr static UINT DLG_BTN_SPACING  = 60;
+	constexpr static RECT m_sizeLimits{660, 600, 0, 0};
+
 private:
 	BOOL _CenterWindow();
 	BOOL _CreateImageList();
 	BOOL _SetButtonIcons();
+	BOOL _Reload();
+	BOOL _Commit();
 
 public:
 	CPathEditorDlg();
 	~CPathEditorDlg();
 	BOOL OnInitDialog( HINSTANCE hInstance, HWND hWnd);
+	BOOL OnMinMaxInfo(LPMINMAXINFO mmi);
+	BOOL OnSize(UINT width, UINT height);
 	BOOL OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	BOOL OnNotify(LPNMHDR lpNMHDR);
 	BOOL OnOK();

@@ -31,22 +31,28 @@
 #include <vector>
 #include <string>
 
+#include "DlgCtrl.hpp"
+
 typedef std::vector<std::wstring> StringListT;
 
-class CPathListCtrl
+class CPathListCtrl: public CDlgCtrl
 {
 private:
-	HWND m_hWnd;
-
 	StringListT m_str_list;
 	CPathReader m_reader;
+	bool m_failed;
+	bool m_modified;
 
 private:
 	std::wstring _ExpandEnvironmentStrings(const std::wstring& sVar);
 	int _GetImageIndex( std::wstring fname);
+	bool _LoadData();
+	void _AdjustColumnWidth();
 
 public:
+	using CDlgCtrl::Init;
 	void Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszValueName);
+	bool Reload();
 	bool Commit();
 
 	void AddPath();
@@ -58,4 +64,10 @@ public:
 
 	void OnDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
 	void OnGetdispinfo(NMLVDISPINFO *pDispInfo);
+
+	void Resize(UINT w, UINT h) { CDlgCtrl::Resize(w, h); _AdjustColumnWidth(); };
+	void MoveAndResize(UINT x, UINT y, UINT w, UINT h) { CDlgCtrl::MoveAndResize(x, y, w, h); _AdjustColumnWidth(); };
+
+	bool IsFailed()   { return m_failed; }
+	bool IsModified() { return m_modified; }
 };

@@ -9,3 +9,11 @@ The default environment editor is not great at editing PATH if there are lot of 
 * Double clicking any path entry attempts to open in Windows Explorer.
 
 ![picture](http://farm6.staticflickr.com/5528/9216019339_ea67407001_z.jpg)
+
+## Extended version ToDo
++ Window resizing
+  add affter selected
+  manual edit
++ Apply/Reload
+  Externally modified check
+  hotkeys: Ctrl-Up/Ctrl-Down 

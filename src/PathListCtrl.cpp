@@ -62,25 +62,13 @@ int CPathListCtrl::_GetImageIndex( std::wstring fname)
     return GetFileAttributes(pathName.c_str()) == INVALID_FILE_ATTRIBUTES ? 1 : 0;
 }
 
-void CPathListCtrl::Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszValueName)
+bool CPathListCtrl::_LoadData()
 {
-    m_hWnd = hWnd;
-    ListView_SetImageList( m_hWnd, hImageList, LVSIL_SMALL);
-
-    RECT reg;
-    ::GetWindowRect( ListView_GetHeader( m_hWnd), &reg);
-
-    LVCOLUMN lvColumn = { 0 };
-    lvColumn.mask = LVCF_WIDTH;
-    lvColumn.cx = reg.right - reg.left;
-    ListView_InsertColumn( m_hWnd, 0, &lvColumn);
-
-    DWORD dwStyle = LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;
-    ListView_SetExtendedListViewStyle( m_hWnd, dwStyle);
-
-    // load data
-    m_reader = CPathReader( hKey, lpszKeyName, lpszValueName);
-    m_reader.Read( m_str_list);
+    ListView_DeleteAllItems(m_hWnd);
+    m_str_list.clear();
+    m_modified = false;
+    m_failed = !m_reader.Read( m_str_list);
+    if (m_failed) return false;
     for( std::size_t count = 0; count < m_str_list.size(); ++count)
     {
         LVITEM lvItem = { 0 };
@@ -90,6 +78,47 @@ void CPathListCtrl::Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR l
         lvItem.pszText = LPSTR_TEXTCALLBACK;
         ListView_InsertItem( m_hWnd, &lvItem);
     }
+
+    return true;
+}
+
+void CPathListCtrl::_AdjustColumnWidth()
+{
+    ListView_SetColumnWidth(m_hWnd, 0, LVSCW_AUTOSIZE_USEHEADER);
+}
+
+void CPathListCtrl::Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszValueName)
+{
+    CDlgCtrl::Init(hWnd);
+    ListView_SetImageList( m_hWnd, hImageList, LVSIL_SMALL);
+
+    LVCOLUMN lvColumn = { 0 };
+    ListView_InsertColumn( m_hWnd, 0, &lvColumn);
+
+    DWORD dwStyle = LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;
+    ListView_SetExtendedListViewStyle( m_hWnd, dwStyle);
+
+    // load data
+    m_reader = CPathReader( hKey, lpszKeyName, lpszValueName);
+    _LoadData();
+
+    _AdjustColumnWidth();
+}
+
+bool CPathListCtrl::Reload()
+{
+	// save top position
+	int top = ListView_GetTopIndex(m_hWnd);
+
+	if (!_LoadData()) return false;
+
+	// try to scroll saved position back to the top
+	ListView_EnsureVisible(m_hWnd, top, FALSE);
+	RECT rcItem;
+	ListView_GetItemRect(m_hWnd, top, &rcItem, LVIR_BOUNDS);
+	ListView_Scroll(m_hWnd, 0, rcItem.top);
+
+	return true;
 }
 
 bool CPathListCtrl::Commit()
@@ -104,7 +133,9 @@ bool CPathListCtrl::Commit()
         strValue.resize(strValue.find_first_of(L'\0'));
         strList.push_back(strValue);
     }
-    return m_reader.Write( strList);
+    m_failed = !m_reader.Write( strList);
+    if (!m_failed) m_modified = false;
+    return !m_failed;
 }
 
 void CPathListCtrl::AddPath()
@@ -118,7 +149,7 @@ void CPathListCtrl::AddPath()
         std::wstring strPath(MAX_PATH, 0);
         SHGetPathFromIDList(strList, &strPath[0]);
         strPath.resize(strPath.find_first_of(L'\0'));
-        m_str_list.push_back(strPath);
+        m_str_list.push_back(strPath), m_modified = true;
 
         LVITEM lvItem = { 0 };
         lvItem.mask = LVIF_TEXT | LVIF_STATE;
@@ -126,6 +157,8 @@ void CPathListCtrl::AddPath()
         lvItem.pszText = LPSTR_TEXTCALLBACK;
         ListView_InsertItem( m_hWnd, &lvItem);
     }
+
+    _AdjustColumnWidth();
 }
 
 void CPathListCtrl::EditPath()
@@ -147,7 +180,7 @@ void CPathListCtrl::EditPath()
     {
         std::wstring pathName(MAX_PATH, 0);
         SHGetPathFromIDList(strList, &pathName[0]);
-        pathName.resize(pathName.find_first_of(L'\0'));
+        pathName.resize(pathName.find_first_of(L'\0')), m_modified = true;
 
         m_str_list[iItem] = pathName;
         ListView_Update( m_hWnd, iItem);
@@ -172,13 +205,15 @@ void CPathListCtrl::RemovePath()
     if( iItem == -1)
         return;
 
-    m_str_list.erase( std::find( m_str_list.begin(), m_str_list.end(), m_str_list[iItem]));
+    m_str_list.erase( std::find( m_str_list.begin(), m_str_list.end(), m_str_list[iItem])), m_modified = true;
     ListView_DeleteItem( m_hWnd, iItem);
     ListView_Update( m_hWnd, iItem);
 
     if( iItem == m_str_list.size())
         iItem = iItem - 1;
     ListView_SetItemState( m_hWnd, iItem, LVNI_SELECTED, LVNI_SELECTED);
+
+    _AdjustColumnWidth();
 }
 
 void CPathListCtrl::OnGetdispinfo( NMLVDISPINFO *pDispInfo)
@@ -202,7 +237,7 @@ void CPathListCtrl::MoveUp()
     if( iItem == -1 || iItem == 0)
         return;
 
-    m_str_list[iItem].swap( m_str_list[iItem - 1]);
+    m_str_list[iItem].swap( m_str_list[iItem - 1]), m_modified = true;
     ListView_Update( m_hWnd, iItem);
     ListView_Update( m_hWnd, iItem - 1);
     ListView_SetItemState( m_hWnd, iItem - 1, LVNI_SELECTED, LVNI_SELECTED);
@@ -215,7 +250,7 @@ void CPathListCtrl::MoveDown()
     if( iItem == -1 || ( iItem == ( m_str_list.size() - 1)))
         return;
 
-    m_str_list[iItem].swap( m_str_list[iItem + 1]);
+    m_str_list[iItem].swap( m_str_list[iItem + 1]), m_modified = true;
     ListView_Update( m_hWnd, iItem);
     ListView_Update( m_hWnd, iItem + 1);
     ListView_SetItemState( m_hWnd, iItem + 1, LVNI_SELECTED, LVNI_SELECTED);

@@ -27,6 +27,7 @@
 #include "PathEditorDlg.h"
 #include "resource.h"
 #include "Util.h"
+#include "DlgCtrl.hpp"
 
 #include <algorithm>
 
@@ -169,7 +170,54 @@ BOOL CPathEditorDlg::_SetButtonIcons()
 	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_DOWN), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDownIcon);
 	m_ButtonIcons.push_back(hDownIcon);
 
+	HICON hRefreshIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_REFRESH), IMAGE_ICON, 16, 16, LR_SHARED);
+	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_REFRESH), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hRefreshIcon);
+	m_ButtonIcons.push_back(hRefreshIcon);
+
 	return TRUE;
+}
+
+BOOL CPathEditorDlg::_Reload()
+{
+	static LPCWSTR reqs[] = {
+		NULL,
+		L"User PATH was modified, reload anyway?",
+		L"System PATH was modified, reload anyway?",
+		L"Both User and System PATHs were modified, reload anyway?",
+	};
+	LPCWSTR req = reqs[int(m_sysListCtrl.IsModified()) << 1 | int(m_usrListCtrl.IsModified())];
+	if (req && MessageBox( m_hWnd, req, L"Path Editor: Uncommitted changes", MB_ICONQUESTION | MB_YESNO) != IDYES)
+		return FALSE;
+
+	BOOL ret = TRUE;
+	if (!m_usrListCtrl.Reload()) ret = FALSE;
+	if (!m_sysListCtrl.Reload()) ret = FALSE;
+
+	return ret;
+}
+
+BOOL CPathEditorDlg::_Commit()
+{
+    static LPCWSTR errs[] = {
+		NULL,
+		L"Failed to save User PATH",
+		L"Failed to save System PATH",
+		L"Failed to save both System and User PATHs",
+	};
+
+	BOOL usrOk = m_usrListCtrl.Commit();
+	BOOL sysOk = !m_bIsAdmin || m_sysListCtrl.Commit();
+
+	int err = !sysOk << 1 | !usrOk;
+	if (err)
+		MessageBox( m_hWnd, errs[err], L"Path Editor", MB_OK);
+
+	// broadcast path change messages to interested parties
+	if (usrOk || (m_bIsAdmin && sysOk)) {
+		DWORD_PTR dwResult = 0;
+		SendMessageTimeout( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 1, &dwResult);
+	}
+	return !err;
 }
 
 BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
@@ -177,6 +225,26 @@ BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
 	// save interesting handles
 	m_hWnd = hWnd;
 	m_hInstance = hInstance;
+
+	m_okBtn       .Init( ::GetDlgItem(m_hWnd, IDOK));
+	m_cancelBtn   .Init( ::GetDlgItem(m_hWnd, IDCANCEL));
+	m_gainPrivBtn .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_GAIN_PRIVILEGE));
+	m_applyBtn    .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_APPLY));
+	m_refreshBtn  .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_REFRESH));
+
+	m_usrGroup    .Init( ::GetDlgItem(m_hWnd, IDC_STATIC_USER));
+	m_usrAddBtn   .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_USER_ADD));
+	m_usrEditBtn  .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_USER_EDIT));
+	m_usrRemoveBtn.Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_USER_REMOVE));
+	m_usrUpBtn    .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_USER_UP));
+	m_usrDownBtn  .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_USER_DOWN));
+
+	m_sysGroup    .Init( ::GetDlgItem(m_hWnd, IDC_STATIC_SYSTEM));
+	m_sysAddBtn   .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_SYSTEM_ADD));
+	m_sysEditBtn  .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_SYSTEM_EDIT));
+	m_sysRemoveBtn.Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_SYSTEM_REMOVE));
+	m_sysUpBtn    .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_SYSTEM_UP));
+	m_sysDownBtn  .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_SYSTEM_DOWN));
 
 	// set application icon
 	m_hIcon = LoadIconW(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
@@ -187,15 +255,13 @@ BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
 		return FALSE;
 	if( _CreateImageList() == FALSE)
 		return FALSE;
-	if( _CenterWindow() == FALSE)
-		return FALSE;
 
 	m_bIsAdmin = IsProcessAdmin( ::GetCurrentProcess());
 	m_usrListCtrl.Init( ::GetDlgItem(m_hWnd, IDC_LIST_USER), m_hImageList,
 		HKEY_CURRENT_USER, L"Environment", L"Path");
     if(m_bIsAdmin)
 	{
-		::ShowWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_GAIN_PRIVILEGE), SW_HIDE);
+        m_gainPrivBtn.Show(SW_HIDE);
         m_sysListCtrl.Init( ::GetDlgItem( m_hWnd, IDC_LIST_SYSTEM), m_hImageList,
 			HKEY_LOCAL_MACHINE,
 			L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
@@ -203,16 +269,70 @@ BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
 	}
 	else
 	{
-		::ShowWindow( ::GetDlgItem( m_hWnd, IDC_LIST_SYSTEM), SW_HIDE);
-		::ShowWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_GAIN_PRIVILEGE), SW_SHOW);
+		m_sysListCtrl.Init( ::GetDlgItem( m_hWnd, IDC_LIST_SYSTEM));
+
+		m_sysListCtrl.Show(SW_HIDE);
+		m_gainPrivBtn.Show(SW_SHOW);
 		Button_SetElevationRequiredState( ::GetDlgItem( m_hWnd, IDC_BUTTON_GAIN_PRIVILEGE), TRUE);
 
-		::EnableWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_UP),     FALSE);
-		::EnableWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_DOWN),   FALSE);
-		::EnableWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_ADD),    FALSE);
-		::EnableWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_REMOVE), FALSE);
-		::EnableWindow( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_EDIT),   FALSE);
+		m_sysListCtrl .Enable(FALSE);
+		m_sysUpBtn    .Enable(FALSE);
+		m_sysDownBtn  .Enable(FALSE);
+		m_sysAddBtn   .Enable(FALSE);
+		m_sysRemoveBtn.Enable(FALSE);
+		m_sysEditBtn  .Enable(FALSE);
 	}
+
+	// initial resize
+	RECT rcArea;
+	::GetWindowRect(hWnd, &rcArea);
+	int width  = rcArea.right  - rcArea.left;
+	int height = rcArea.bottom - rcArea.top;
+	// ensure window is within limits
+	if (width  < m_sizeLimits.left) width  = m_sizeLimits.left;
+	if (height < m_sizeLimits.top)  height = m_sizeLimits.top;
+	::SetWindowPos(hWnd, NULL, 0, 0, width, height, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE);
+
+	if( _CenterWindow() == FALSE)
+		return FALSE;
+
+	return TRUE;
+}
+
+BOOL CPathEditorDlg::OnMinMaxInfo(LPMINMAXINFO mmi)
+{
+	mmi->ptMinTrackSize.x = m_sizeLimits.left;
+	mmi->ptMinTrackSize.y = m_sizeLimits.top;
+
+	return TRUE;
+}
+
+BOOL CPathEditorDlg::OnSize(UINT width, UINT height)
+{
+	// order is important
+	m_okBtn.Move((width - m_okBtn.w() - m_applyBtn.w() - m_cancelBtn.w() - DLG_BTN_SPACING * 2) / 2, height - MARGIN - m_okBtn.h());
+	m_applyBtn.Move(m_okBtn.x() + m_okBtn.w() + DLG_BTN_SPACING, m_okBtn.y());
+	m_cancelBtn.Move(m_applyBtn.x() + m_applyBtn.w() + DLG_BTN_SPACING, m_okBtn.y());
+
+	m_usrGroup.MoveAndResize(MARGIN, MARGIN, width - MARGIN * 2, (m_okBtn.y() - MARGIN) / 2 - MARGIN);
+	m_usrAddBtn.Move(m_usrGroup.x() + EDIT_BTN_POS, m_usrGroup.y() + m_usrGroup.h() - m_usrAddBtn.h() - MARGIN);
+	m_usrEditBtn.Move(m_usrAddBtn.x() + m_usrAddBtn.w() + EDIT_BTN_SPASING, m_usrAddBtn.y());
+	m_usrRemoveBtn.Move(m_usrEditBtn.x() + m_usrEditBtn.w() + EDIT_BTN_SPASING, m_usrAddBtn.y());
+	m_usrUpBtn.Move(m_usrRemoveBtn.x() + m_usrRemoveBtn.w() + MOVE_BTN_POS, m_usrAddBtn.y());
+	m_usrDownBtn.Move(m_usrUpBtn.x() + m_usrUpBtn.w() + EDIT_BTN_SPASING, m_usrAddBtn.y());
+	m_usrListCtrl.MoveAndResize(m_usrGroup.x() + MARGIN, m_usrGroup.y() + LIST_MARGIN, m_usrGroup.w() - MARGIN * 2, m_usrGroup.h() - m_usrAddBtn.h() - LIST_MARGIN - MARGIN * 2);
+
+	m_sysGroup.MoveAndResize(m_usrGroup.x(), m_usrGroup.y() + m_usrGroup.h() + MARGIN, m_usrGroup.w(), m_usrGroup.h());
+	m_sysAddBtn.Move(m_usrAddBtn.x(), m_sysGroup.y() + m_sysGroup.h() - m_sysAddBtn.h() - MARGIN);
+	m_sysEditBtn.Move(m_usrEditBtn.x(), m_sysAddBtn.y());
+	m_sysRemoveBtn.Move(m_usrRemoveBtn.x(), m_sysAddBtn.y());
+	m_sysUpBtn.Move(m_usrUpBtn.x(), m_sysAddBtn.y());
+	m_sysDownBtn.Move(m_usrDownBtn.x(), m_sysAddBtn.y());
+	m_sysListCtrl.MoveAndResize(m_usrListCtrl.x(), m_sysGroup.y() + LIST_MARGIN, m_usrListCtrl.w(), m_usrListCtrl.h());
+
+	m_refreshBtn.Move(m_sysGroup.x(), m_okBtn.y());
+	m_gainPrivBtn.Move((width - m_gainPrivBtn.w()) / 2, m_sysListCtrl.y() + (m_sysListCtrl.h() - m_gainPrivBtn.h()) / 2 - MARGIN);
+
 	return TRUE;
 }
 
@@ -268,8 +388,16 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 	case IDC_BUTTON_GAIN_PRIVILEGE:
 		OnButtonGainPrivilege();
 		break;
+	case IDC_BUTTON_APPLY:
+		_Commit();
+		break;
+	case IDC_BUTTON_REFRESH:
+	case ID_ACC_REFRESH:
+		_Reload();
+		break;
 	case IDOK:
 		OnOK();
+		/* fall through */
 	case IDCANCEL:
 		SendMessage( m_hWnd, WM_CLOSE, 0, 0);
 		return TRUE;
@@ -319,20 +447,5 @@ void CPathEditorDlg::OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate)
 
 BOOL CPathEditorDlg::OnOK()
 {
-	if( !m_usrListCtrl.Commit())
-	{
-		MessageBox( m_hWnd, L"Failed to save User PATH", L"Path Editor", MB_OK);
-		return FALSE;
-	}
-
-	if( m_bIsAdmin && !m_sysListCtrl.Commit())
-	{
-		MessageBox( m_hWnd, L"Failed to save System PATH", L"Path Editor", MB_OK);
-		return FALSE;
-	}
-
-	// broadcast path change messages to interested parties
-	DWORD_PTR dwResult = 0;
-	SendMessageTimeout( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 1, &dwResult);
-	return TRUE;
+	return _Commit();
 }
