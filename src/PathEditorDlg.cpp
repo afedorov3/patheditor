@@ -213,7 +213,8 @@ BOOL CPathEditorDlg::_Commit()
 		MessageBox( m_hWnd, errs[err], L"Path Editor", MB_OK);
 
 	// broadcast path change messages to interested parties
-	if (usrOk || (m_bIsAdmin && sysOk)) {
+	if (usrOk || (m_bIsAdmin && sysOk))
+	{
 		DWORD_PTR dwResult = 0;
 		SendMessageTimeout( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 1, &dwResult);
 	}
@@ -362,7 +363,7 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 		m_usrListCtrl.MoveDown();
 		break;
 	case IDC_BUTTON_USER_ADD:
-		m_usrListCtrl.AddPath();
+		m_usrListCtrl.AddPath(GetKeyState(VK_SHIFT) & 0x80);
 		break;
 	case IDC_BUTTON_USER_REMOVE:
 		m_usrListCtrl.RemovePath();
@@ -377,7 +378,7 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 		m_sysListCtrl.MoveDown();
 		break;
 	case IDC_BUTTON_SYSTEM_ADD:
-		m_sysListCtrl.AddPath();
+		m_sysListCtrl.AddPath(GetKeyState(VK_SHIFT) & 0x80);
 		break;
 	case IDC_BUTTON_SYSTEM_REMOVE:
 		m_sysListCtrl.RemovePath();

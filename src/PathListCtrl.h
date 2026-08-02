@@ -55,7 +55,7 @@ public:
 	bool Reload();
 	bool Commit();
 
-	void AddPath();
+	void AddPath(bool insert=false);
 	void EditPath();
 	void RemovePath();
 

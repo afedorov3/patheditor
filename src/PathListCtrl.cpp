@@ -138,7 +138,7 @@ bool CPathListCtrl::Commit()
     return !m_failed;
 }
 
-void CPathListCtrl::AddPath()
+void CPathListCtrl::AddPath(bool insert)
 {
     BROWSEINFO bi = { 0 };
     bi.hwndOwner = GetParent(m_hWnd);
@@ -149,16 +149,28 @@ void CPathListCtrl::AddPath()
         std::wstring strPath(MAX_PATH, 0);
         SHGetPathFromIDList(strList, &strPath[0]);
         strPath.resize(strPath.find_first_of(L'\0'));
-        m_str_list.push_back(strPath), m_modified = true;
+
+        int iItem = insert ? ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED) : -1;
+        if( iItem == -1)
+        {
+            iItem = ListView_GetItemCount( m_hWnd);
+            m_str_list.push_back(strPath), m_modified = true;
+        }
+        else
+        {
+            iItem += 1;
+            m_str_list.insert(std::next(m_str_list.begin(), iItem), strPath), m_modified = true;
+        }
 
         LVITEM lvItem = { 0 };
         lvItem.mask = LVIF_TEXT | LVIF_STATE;
-        lvItem.iItem = ListView_GetItemCount( m_hWnd);
+        lvItem.iItem = iItem;
         lvItem.pszText = LPSTR_TEXTCALLBACK;
         ListView_InsertItem( m_hWnd, &lvItem);
-    }
 
-    _AdjustColumnWidth();
+        ListView_EnsureVisible( m_hWnd, iItem, FALSE);
+        _AdjustColumnWidth();
+    }
 }
 
 void CPathListCtrl::EditPath()
