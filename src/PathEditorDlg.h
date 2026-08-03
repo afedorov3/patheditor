@@ -73,4 +73,7 @@ public:
 	void OnButtonGainPrivilege();
 	void OnListGetDispInfo(NMLVDISPINFO *pDispInfo);
 	void OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
+	void OnCopy();
+	void OnCut();
+	void OnPaste();
 };

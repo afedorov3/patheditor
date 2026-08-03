@@ -363,7 +363,7 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 		m_usrListCtrl.MoveDown();
 		break;
 	case IDC_BUTTON_USER_ADD:
-		m_usrListCtrl.AddPath(GetKeyState(VK_SHIFT) & 0x80);
+		m_usrListCtrl.AddPath((GetKeyState(VK_SHIFT) & 0x80) != 0);
 		break;
 	case IDC_BUTTON_USER_REMOVE:
 		m_usrListCtrl.RemovePath();
@@ -378,7 +378,7 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 		m_sysListCtrl.MoveDown();
 		break;
 	case IDC_BUTTON_SYSTEM_ADD:
-		m_sysListCtrl.AddPath(GetKeyState(VK_SHIFT) & 0x80);
+		m_sysListCtrl.AddPath((GetKeyState(VK_SHIFT) & 0x80) != 0);
 		break;
 	case IDC_BUTTON_SYSTEM_REMOVE:
 		m_sysListCtrl.RemovePath();
@@ -388,6 +388,15 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	case IDC_BUTTON_GAIN_PRIVILEGE:
 		OnButtonGainPrivilege();
+		break;
+	case ID_ACC_COPY_ITEM:
+		OnCopy();
+		break;
+	case ID_ACC_CUT_ITEM:
+		OnCut();
+		break;
+	case ID_ACC_PASTE_ITEM:
+		OnPaste();
 		break;
 	case IDC_BUTTON_APPLY:
 		_Commit();
@@ -449,4 +458,62 @@ void CPathEditorDlg::OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate)
 BOOL CPathEditorDlg::OnOK()
 {
 	return _Commit();
+}
+
+void CPathEditorDlg::OnCopy()
+{
+	if (m_usrListCtrl.IsSelected())
+		Str2Clipboard(m_usrListCtrl.GetItemPath());
+	else if (m_sysListCtrl.IsSelected())
+		Str2Clipboard(m_sysListCtrl.GetItemPath());
+}
+
+void CPathEditorDlg::OnCut()
+{
+	if (m_usrListCtrl.IsSelected())
+	{
+		auto Item = m_usrListCtrl.GetItemPath();
+		if (Item.empty()) return;
+		if (Str2Clipboard(Item))
+			m_usrListCtrl.RemovePath();
+	}
+	else if (m_sysListCtrl.IsSelected())
+	{
+		auto Item = m_sysListCtrl.GetItemPath();
+		if (Item.empty()) return;
+		if (Str2Clipboard(Item))
+			m_sysListCtrl.RemovePath();
+	}
+}
+
+void CPathEditorDlg::OnPaste()
+{
+	CPathListCtrl *list = nullptr;
+	if (m_usrListCtrl.IsSelected())
+		list = &m_usrListCtrl;
+	else if (m_sysListCtrl.IsSelected())
+		list = &m_sysListCtrl;
+	if (list == nullptr) return;
+
+	std::wstring Str;
+	if (!Clipboard2Str(Str)) return;
+
+	size_t nlPos = Str.find_first_of(L"\r\n\0");
+	if (nlPos != std::wstring::npos)
+		Str.resize(nlPos);
+
+	if (Str.size() >= MAX_PATH)
+	{
+		MessageBox(m_hWnd, L"The path you're trying to paste is too long", L"Path Editor", MB_ICONERROR | MB_OK);
+		return;
+	}
+	if (!IsAbsoluteLocalPathValid(Str)) {
+		std::wstring req(L"The path doesn't seem to be a valid absolute local path:\n");
+		req += Str;
+		req += L"\nAdd it anyway?";
+		if (MessageBox(m_hWnd, req.c_str(), L"Path Editor", MB_ICONQUESTION | MB_YESNO) != IDYES)
+			return;
+	}
+
+	list->AddPath(Str, true);
 }

@@ -55,7 +55,8 @@ public:
 	bool Reload();
 	bool Commit();
 
-	void AddPath(bool insert=false);
+	void AddPath(const std::wstring &strPath, bool insert = false);
+	void AddPath(bool insert = false);
 	void EditPath();
 	void RemovePath();
 
@@ -70,4 +71,6 @@ public:
 
 	bool IsFailed()   { return m_failed; }
 	bool IsModified() { return m_modified; }
+
+	std::wstring GetItemPath(int iItem = -1);
 };

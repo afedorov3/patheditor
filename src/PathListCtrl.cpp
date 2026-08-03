@@ -138,6 +138,32 @@ bool CPathListCtrl::Commit()
     return !m_failed;
 }
 
+void CPathListCtrl::AddPath(const std::wstring &strPath, bool insert)
+{
+	if (strPath.size() >= MAX_PATH) return;
+
+    int iItem = insert ? ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED) : -1;
+    if( iItem == -1)
+    {
+        iItem = ListView_GetItemCount( m_hWnd);
+        m_str_list.push_back(strPath), m_modified = true;
+    }
+    else
+    {
+        iItem += 1;
+        m_str_list.insert(std::next(m_str_list.begin(), iItem), strPath), m_modified = true;
+    }
+
+    LVITEM lvItem = { 0 };
+    lvItem.mask = LVIF_TEXT | LVIF_STATE;
+    lvItem.iItem = iItem;
+    lvItem.pszText = LPSTR_TEXTCALLBACK;
+    ListView_InsertItem( m_hWnd, &lvItem);
+
+    ListView_EnsureVisible( m_hWnd, iItem, FALSE);
+    _AdjustColumnWidth();
+}
+
 void CPathListCtrl::AddPath(bool insert)
 {
     BROWSEINFO bi = { 0 };
@@ -150,26 +176,7 @@ void CPathListCtrl::AddPath(bool insert)
         SHGetPathFromIDList(strList, &strPath[0]);
         strPath.resize(strPath.find_first_of(L'\0'));
 
-        int iItem = insert ? ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED) : -1;
-        if( iItem == -1)
-        {
-            iItem = ListView_GetItemCount( m_hWnd);
-            m_str_list.push_back(strPath), m_modified = true;
-        }
-        else
-        {
-            iItem += 1;
-            m_str_list.insert(std::next(m_str_list.begin(), iItem), strPath), m_modified = true;
-        }
-
-        LVITEM lvItem = { 0 };
-        lvItem.mask = LVIF_TEXT | LVIF_STATE;
-        lvItem.iItem = iItem;
-        lvItem.pszText = LPSTR_TEXTCALLBACK;
-        ListView_InsertItem( m_hWnd, &lvItem);
-
-        ListView_EnsureVisible( m_hWnd, iItem, FALSE);
-        _AdjustColumnWidth();
+        AddPath(strPath, insert);
     }
 }
 
@@ -192,9 +199,9 @@ void CPathListCtrl::EditPath()
     {
         std::wstring pathName(MAX_PATH, 0);
         SHGetPathFromIDList(strList, &pathName[0]);
-        pathName.resize(pathName.find_first_of(L'\0')), m_modified = true;
+        pathName.resize(pathName.find_first_of(L'\0'));
 
-        m_str_list[iItem] = pathName;
+        m_str_list[iItem] = pathName, m_modified = true;
         ListView_Update( m_hWnd, iItem);
     }
 }
@@ -267,4 +274,18 @@ void CPathListCtrl::MoveDown()
     ListView_Update( m_hWnd, iItem + 1);
     ListView_SetItemState( m_hWnd, iItem + 1, LVNI_SELECTED, LVNI_SELECTED);
     ListView_EnsureVisible( m_hWnd, iItem + 1, FALSE);
+}
+
+std::wstring CPathListCtrl::GetItemPath(int iItem)
+{
+    std::wstring strItem;
+    if (iItem < 0) iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
+    if (iItem < 0) return strItem;
+
+    int cchTextMax = MAX_PATH;
+    strItem.resize(cchTextMax, 0);
+    ListView_GetItemText(m_hWnd, iItem, 0, &strItem[0], cchTextMax);
+    strItem.resize(strItem.find_first_of(L'\0'));
+
+    return strItem;
 }

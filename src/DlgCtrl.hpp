@@ -36,6 +36,7 @@ public:
     };
 	virtual void Show(int nCmdShow) { ::ShowWindow( m_hWnd, nCmdShow); }
 	virtual void Enable(bool bEnable) { ::EnableWindow( m_hWnd, bEnable); }
+	virtual bool IsSelected() { return ::GetFocus() == m_hWnd; }
     UINT x() { return m_x; }
     UINT y() { return m_y; }
     UINT w() { return m_w; }
