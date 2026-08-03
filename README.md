@@ -10,10 +10,9 @@ The default environment editor is not great at editing PATH if there are lot of 
 
 ![picture](http://farm6.staticflickr.com/5528/9216019339_ea67407001_z.jpg)
 
-## Extended version ToDo
-+ Window resizing
-  add affter selected
-  manual edit
-+ Apply/Reload
-  Externally modified check
-  hotkeys: Ctrl-Up/Ctrl-Down 
+## Extended version features
+* Window resizing
+* Apply/Reload
+* Insert after selected (Shift+Add)
+* Hotkeys: Copy (Ctrl+C Ctrl+Ins), Cut (Ctrl+X Shift+Del), Paste (Ctrl+V Shift+Ins)
+

@@ -28,10 +28,13 @@
 #include "resource.h"
 #include "PathEditorDlg.h"
 
-INT_PTR CALLBACK DialogProc(HWND hWnd, UINT, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
 {
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
+
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATORS));
 
 	HWND hWnd = CreateDialogParam( hInstance, MAKEINTRESOURCE(IDD_PATHEDITOR_DIALOG), 0,
@@ -62,7 +65,7 @@ INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_GETMINMAXINFO:
 		return theDialog.OnMinMaxInfo(LPMINMAXINFO(lParam));
 	case WM_SIZE:
-		return theDialog.OnSize(LOWORD(lParam), HIWORD(lParam));
+		return theDialog.OnSize(UINT(wParam), LOWORD(lParam), HIWORD(lParam));
 	case WM_COMMAND:
 		return theDialog.OnCommand(uMsg, wParam, lParam);
 	case WM_CLOSE:

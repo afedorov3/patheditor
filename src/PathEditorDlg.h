@@ -46,12 +46,12 @@ private:
 
 	std::vector<HICON> m_ButtonIcons;
 
-	constexpr static UINT MARGIN           = 10;
-	constexpr static UINT LIST_MARGIN      = 20;
-	constexpr static UINT EDIT_BTN_POS     = 45;
-	constexpr static UINT EDIT_BTN_SPASING = 10;
-	constexpr static UINT MOVE_BTN_POS     = 90;
-	constexpr static UINT DLG_BTN_SPACING  = 60;
+	constexpr static LONG MARGIN           = 10;
+	constexpr static LONG LIST_MARGIN      = 20;
+	constexpr static LONG EDIT_BTN_POS     = 45;
+	constexpr static LONG EDIT_BTN_SPASING = 10;
+	constexpr static LONG MOVE_BTN_POS     = 90;
+	constexpr static LONG DLG_BTN_SPACING  = 60;
 	constexpr static RECT m_sizeLimits{660, 600, 0, 0};
 
 private:
@@ -66,7 +66,7 @@ public:
 	~CPathEditorDlg();
 	BOOL OnInitDialog( HINSTANCE hInstance, HWND hWnd);
 	BOOL OnMinMaxInfo(LPMINMAXINFO mmi);
-	BOOL OnSize(UINT width, UINT height);
+	BOOL OnSize(UINT nType, UINT width, UINT height);
 	BOOL OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	BOOL OnNotify(LPNMHDR lpNMHDR);
 	BOOL OnOK();

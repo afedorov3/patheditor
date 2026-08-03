@@ -84,7 +84,7 @@ BOOL CPathEditorDlg::_CenterWindow()
 
 		MONITORINFO minfo;
 		minfo.cbSize = sizeof(MONITORINFO);
-		BOOL bResult = ::GetMonitorInfo(hMonitor, &minfo);
+		::GetMonitorInfo(hMonitor, &minfo);
 
 		rcArea = minfo.rcWork;
 		if(hWndCenter == NULL)
@@ -308,8 +308,10 @@ BOOL CPathEditorDlg::OnMinMaxInfo(LPMINMAXINFO mmi)
 	return TRUE;
 }
 
-BOOL CPathEditorDlg::OnSize(UINT width, UINT height)
+BOOL CPathEditorDlg::OnSize(UINT nType, UINT width, UINT height)
 {
+	UNREFERENCED_PARAMETER(nType);
+
 	// order is important
 	m_okBtn.Move((width - m_okBtn.w() - m_applyBtn.w() - m_cancelBtn.w() - DLG_BTN_SPACING * 2) / 2, height - MARGIN - m_okBtn.h());
 	m_applyBtn.Move(m_okBtn.x() + m_okBtn.w() + DLG_BTN_SPACING, m_okBtn.y());
@@ -343,7 +345,7 @@ void CPathEditorDlg::OnButtonGainPrivilege()
 	if (0 == GetModuleFileName(0, &strBuffer[0], static_cast<DWORD>(strBuffer.size())))
 		return;
 
-	SHELLEXECUTEINFO exInfo = { 0 };
+	SHELLEXECUTEINFO exInfo{ };
 	exInfo.cbSize = sizeof(exInfo);
 	exInfo.lpVerb = L"runas";
 	exInfo.lpFile = strBuffer.c_str();
@@ -354,6 +356,9 @@ void CPathEditorDlg::OnButtonGainPrivilege()
 
 BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 {
+	UNREFERENCED_PARAMETER(nMsg);
+	UNREFERENCED_PARAMETER(lParam);
+
 	switch(LOWORD(wParam))
 	{
 	case IDC_BUTTON_USER_UP:

@@ -32,6 +32,8 @@
 
 int CALLBACK BrowseCallbackProc( HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
+    UNREFERENCED_PARAMETER(lParam);
+
     if( uMsg == BFFM_INITIALIZED)
         SendMessage( hWnd, BFFM_SETSELECTION, TRUE, lpData);
     return 0;
@@ -71,7 +73,7 @@ bool CPathListCtrl::_LoadData()
     if (m_failed) return false;
     for( std::size_t count = 0; count < m_str_list.size(); ++count)
     {
-        LVITEM lvItem = { 0 };
+        LVITEM lvItem{ };
         lvItem.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
         lvItem.iItem = static_cast<int>(count);
         lvItem.iImage = I_IMAGECALLBACK;
@@ -92,7 +94,7 @@ void CPathListCtrl::Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR l
     CDlgCtrl::Init(hWnd);
     ListView_SetImageList( m_hWnd, hImageList, LVSIL_SMALL);
 
-    LVCOLUMN lvColumn = { 0 };
+    LVCOLUMN lvColumn{ };
     ListView_InsertColumn( m_hWnd, 0, &lvColumn);
 
     DWORD dwStyle = LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;
@@ -140,7 +142,7 @@ bool CPathListCtrl::Commit()
 
 void CPathListCtrl::AddPath(const std::wstring &strPath, bool insert)
 {
-	if (strPath.size() >= MAX_PATH) return;
+    if (strPath.size() >= MAX_PATH) return;
 
     int iItem = insert ? ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED) : -1;
     if( iItem == -1)
@@ -154,7 +156,7 @@ void CPathListCtrl::AddPath(const std::wstring &strPath, bool insert)
         m_str_list.insert(std::next(m_str_list.begin(), iItem), strPath), m_modified = true;
     }
 
-    LVITEM lvItem = { 0 };
+    LVITEM lvItem{ };
     lvItem.mask = LVIF_TEXT | LVIF_STATE;
     lvItem.iItem = iItem;
     lvItem.pszText = LPSTR_TEXTCALLBACK;
@@ -166,7 +168,7 @@ void CPathListCtrl::AddPath(const std::wstring &strPath, bool insert)
 
 void CPathListCtrl::AddPath(bool insert)
 {
-    BROWSEINFO bi = { 0 };
+    BROWSEINFO bi{ };
     bi.hwndOwner = GetParent(m_hWnd);
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI | BIF_NEWDIALOGSTYLE;
     PIDLIST_ABSOLUTE strList = SHBrowseForFolder( &bi);
@@ -175,6 +177,7 @@ void CPathListCtrl::AddPath(bool insert)
         std::wstring strPath(MAX_PATH, 0);
         SHGetPathFromIDList(strList, &strPath[0]);
         strPath.resize(strPath.find_first_of(L'\0'));
+        ::CoTaskMemFree(strList);
 
         AddPath(strPath, insert);
     }
@@ -186,7 +189,7 @@ void CPathListCtrl::EditPath()
     if( iItem == -1)
         return;
 
-    BROWSEINFO bi = { 0 };
+    BROWSEINFO bi{ };
     bi.hwndOwner = GetParent(m_hWnd);
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI | BIF_NEWDIALOGSTYLE;
     bi.lpfn = BrowseCallbackProc;
@@ -197,9 +200,11 @@ void CPathListCtrl::EditPath()
     PIDLIST_ABSOLUTE strList = SHBrowseForFolder( &bi);
     if( strList)
     {
-        std::wstring pathName(MAX_PATH, 0);
+        pathName.clear();
+        pathName.resize(MAX_PATH, 0);
         SHGetPathFromIDList(strList, &pathName[0]);
         pathName.resize(pathName.find_first_of(L'\0'));
+        ::CoTaskMemFree(strList);
 
         m_str_list[iItem] = pathName, m_modified = true;
         ListView_Update( m_hWnd, iItem);
@@ -228,7 +233,7 @@ void CPathListCtrl::RemovePath()
     ListView_DeleteItem( m_hWnd, iItem);
     ListView_Update( m_hWnd, iItem);
 
-    if( iItem == m_str_list.size())
+    if( iItem == int(m_str_list.size()))
         iItem = iItem - 1;
     ListView_SetItemState( m_hWnd, iItem, LVNI_SELECTED, LVNI_SELECTED);
 
@@ -266,7 +271,7 @@ void CPathListCtrl::MoveUp()
 void CPathListCtrl::MoveDown()
 {
     int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
-    if( iItem == -1 || ( iItem == ( m_str_list.size() - 1)))
+    if( iItem == -1 || ( iItem == int( m_str_list.size() - 1)))
         return;
 
     m_str_list[iItem].swap( m_str_list[iItem + 1]), m_modified = true;

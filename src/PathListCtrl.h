@@ -66,8 +66,8 @@ public:
 	void OnDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
 	void OnGetdispinfo(NMLVDISPINFO *pDispInfo);
 
-	void Resize(UINT w, UINT h) { CDlgCtrl::Resize(w, h); _AdjustColumnWidth(); };
-	void MoveAndResize(UINT x, UINT y, UINT w, UINT h) { CDlgCtrl::MoveAndResize(x, y, w, h); _AdjustColumnWidth(); };
+	void Resize(LONG w, LONG h) { CDlgCtrl::Resize(w, h); _AdjustColumnWidth(); };
+	void MoveAndResize(LONG x, LONG y, LONG w, LONG h) { CDlgCtrl::MoveAndResize(x, y, w, h); _AdjustColumnWidth(); };
 
 	bool IsFailed()   { return m_failed; }
 	bool IsModified() { return m_modified; }

@@ -28,8 +28,10 @@
 #include "Util.h"
 
 #include <memory>
+#include <iostream>
 #include <sstream>
 #include <regex>
+#include <iterator>
 
 StringListT split_string_by( const std::wstring& sInput, wchar_t wcSeparator)
 {
