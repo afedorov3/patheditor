@@ -69,10 +69,12 @@ INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 		return theDialog.OnCommand(uMsg, wParam, lParam);
 	case WM_CLOSE:
+		if (!theDialog.OnClose()) return TRUE;
 		DestroyWindow(hWnd);
 		return TRUE;
 	case WM_DESTROY:
 		PostQuitMessage(0);
+		break;
 	}
 	return FALSE;
 }

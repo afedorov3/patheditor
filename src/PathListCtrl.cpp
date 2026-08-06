@@ -97,8 +97,12 @@ void CPathListCtrl::Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR l
     LVCOLUMN lvColumn{ };
     ListView_InsertColumn( m_hWnd, 0, &lvColumn);
 
-    DWORD dwStyle = LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;
-    ListView_SetExtendedListViewStyle( m_hWnd, dwStyle);
+    LONG_PTR dwStyle = GetWindowLongPtr(m_hWnd, GWL_STYLE);
+    dwStyle |= LVS_EDITLABELS;
+    SetWindowLongPtr(m_hWnd, GWL_STYLE, dwStyle);
+
+    DWORD dwExStyle = LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES;
+    ListView_SetExtendedListViewStyle( m_hWnd, dwExStyle);
 
     // load data
     m_reader = CPathReader( hKey, lpszKeyName, lpszValueName);
@@ -109,18 +113,18 @@ void CPathListCtrl::Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR l
 
 bool CPathListCtrl::Reload()
 {
-	// save top position
-	int top = ListView_GetTopIndex(m_hWnd);
+    // save top position
+    int top = ListView_GetTopIndex(m_hWnd);
 
-	if (!_LoadData()) return false;
+    if (!_LoadData()) return false;
 
-	// try to scroll saved position back to the top
-	ListView_EnsureVisible(m_hWnd, top, FALSE);
-	RECT rcItem;
-	ListView_GetItemRect(m_hWnd, top, &rcItem, LVIR_BOUNDS);
-	ListView_Scroll(m_hWnd, 0, rcItem.top);
+    // try to scroll saved position back to the top
+    ListView_EnsureVisible(m_hWnd, top, FALSE);
+    RECT rcItem;
+    ListView_GetItemRect(m_hWnd, top, &rcItem, LVIR_BOUNDS);
+    ListView_Scroll(m_hWnd, 0, rcItem.top);
 
-	return true;
+    return true;
 }
 
 bool CPathListCtrl::Commit()
@@ -255,6 +259,20 @@ void CPathListCtrl::OnGetdispinfo( NMLVDISPINFO *pDispInfo)
         pDispInfo->item.iImage = _GetImageIndex( m_str_list[pDispInfo->item.iItem]);
 }
 
+BOOL CPathListCtrl::OnEndLabelEdit( NMLVDISPINFO *pDispInfo)
+{
+    if( pDispInfo->item.iSubItem == 0 && (pDispInfo->item.mask & LVIF_TEXT) && pDispInfo->item.pszText)
+    {
+        if (m_str_list[pDispInfo->item.iItem].compare(pDispInfo->item.pszText) != 0)
+        {
+            m_str_list[pDispInfo->item.iItem] = pDispInfo->item.pszText, m_modified = true;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 void CPathListCtrl::MoveUp()
 {
     int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
@@ -293,4 +311,12 @@ std::wstring CPathListCtrl::GetItemPath(int iItem)
     strItem.resize(strItem.find_first_of(L'\0'));
 
     return strItem;
+}
+
+void CPathListCtrl::EditItem(int iItem)
+{
+    if (iItem < 0) iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
+    if (iItem < 0) return;
+
+    ListView_EditLabel(m_hWnd, iItem);
 }

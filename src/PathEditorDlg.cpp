@@ -131,12 +131,12 @@ BOOL CPathEditorDlg::_CreateImageList()
 	if( m_hImageList == NULL)
 		return FALSE;
 
-    HICON hIconExist = LoadIconW( m_hInstance, MAKEINTRESOURCE(IDI_ICON_EXIST));
-    ImageList_ReplaceIcon( m_hImageList, -1, hIconExist);
-    if( DeleteObject(hIconExist))
+	HICON hIconExist = LoadIconW( m_hInstance, MAKEINTRESOURCE(IDI_ICON_EXIST));
+	ImageList_ReplaceIcon( m_hImageList, -1, hIconExist);
+	if( DeleteObject(hIconExist))
 		return FALSE;
 
-    HICON hIconNonExist = LoadIconW( m_hInstance, MAKEINTRESOURCE(IDI_ICON_NON_EXIST));
+	HICON hIconNonExist = LoadIconW( m_hInstance, MAKEINTRESOURCE(IDI_ICON_NON_EXIST));
 	ImageList_ReplaceIcon( m_hImageList, -1, hIconNonExist);
 	if( DeleteObject(hIconNonExist))
 		return FALSE;
@@ -146,32 +146,32 @@ BOOL CPathEditorDlg::_CreateImageList()
 BOOL CPathEditorDlg::_SetButtonIcons()
 {
 	HICON hAddIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_DIR_ADD), IMAGE_ICON, 16, 16, LR_SHARED);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_USER_ADD), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hAddIcon);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_ADD), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hAddIcon);
+	SendMessage( m_usrAddBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hAddIcon);
+	SendMessage( m_sysAddBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hAddIcon);
 	m_ButtonIcons.push_back(hAddIcon);
 
 	HICON hDelIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_DIR_DEL), IMAGE_ICON, 16, 16, LR_SHARED);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_USER_REMOVE), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDelIcon);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_REMOVE), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDelIcon);
+	SendMessage( m_usrRemoveBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDelIcon);
+	SendMessage( m_sysRemoveBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDelIcon);
 	m_ButtonIcons.push_back(hDelIcon);
 
 	HICON hEditIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_DIR_EDIT), IMAGE_ICON, 16, 16, LR_SHARED);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_USER_EDIT), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hEditIcon);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_EDIT), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hEditIcon);
+	SendMessage( m_usrEditBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hEditIcon);
+	SendMessage( m_sysEditBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hEditIcon);
 	m_ButtonIcons.push_back(hEditIcon);
 
 	HICON hUpIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_DIR_UP), IMAGE_ICON, 16, 16, LR_SHARED);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_USER_UP), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hUpIcon);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_UP), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hUpIcon);
+	SendMessage( m_usrUpBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hUpIcon);
+	SendMessage( m_sysUpBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hUpIcon);
 	m_ButtonIcons.push_back(hUpIcon);
 
 	HICON hDownIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_DIR_DOWN), IMAGE_ICON, 16, 16, LR_SHARED);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_USER_DOWN), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDownIcon);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_SYSTEM_DOWN), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDownIcon);
+	SendMessage( m_usrDownBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDownIcon);
+	SendMessage( m_sysDownBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hDownIcon);
 	m_ButtonIcons.push_back(hDownIcon);
 
 	HICON hRefreshIcon = (HICON)LoadImage( m_hInstance, MAKEINTRESOURCE(IDI_ICON_REFRESH), IMAGE_ICON, 16, 16, LR_SHARED);
-	SendMessage( ::GetDlgItem( m_hWnd, IDC_BUTTON_REFRESH), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hRefreshIcon);
+	SendMessage( m_refreshBtn.hWnd(), BM_SETIMAGE, IMAGE_ICON, (LPARAM)hRefreshIcon);
 	m_ButtonIcons.push_back(hRefreshIcon);
 
 	return TRUE;
@@ -181,12 +181,12 @@ BOOL CPathEditorDlg::_Reload()
 {
 	static LPCWSTR reqs[] = {
 		NULL,
-		L"User PATH was modified, reload anyway?",
-		L"System PATH was modified, reload anyway?",
-		L"Both User and System PATHs were modified, reload anyway?",
+		L"User PATH was modified, OK to reload anyway.",
+		L"System PATH was modified, OK to reload anyway.",
+		L"Both User and System PATHs were modified, OK to reload anyway.",
 	};
 	LPCWSTR req = reqs[int(m_sysListCtrl.IsModified()) << 1 | int(m_usrListCtrl.IsModified())];
-	if (req && MessageBox( m_hWnd, req, L"Path Editor: Uncommitted changes", MB_ICONQUESTION | MB_YESNO) != IDYES)
+	if (req && MessageBox( m_hWnd, req, L"Path Editor: Uncommitted changes", MB_ICONQUESTION | MB_OKCANCEL) != IDOK)
 		return FALSE;
 
 	BOOL ret = TRUE;
@@ -198,15 +198,15 @@ BOOL CPathEditorDlg::_Reload()
 
 BOOL CPathEditorDlg::_Commit()
 {
-    static LPCWSTR errs[] = {
+	static LPCWSTR errs[] = {
 		NULL,
 		L"Failed to save User PATH",
 		L"Failed to save System PATH",
 		L"Failed to save both System and User PATHs",
 	};
 
-	BOOL usrOk = m_usrListCtrl.Commit();
-	BOOL sysOk = !m_bIsAdmin || m_sysListCtrl.Commit();
+	bool usrOk = m_usrListCtrl.Commit();
+	bool sysOk = !m_bIsAdmin || m_sysListCtrl.Commit();
 
 	int err = !sysOk << 1 | !usrOk;
 	if (err)
@@ -221,17 +221,50 @@ BOOL CPathEditorDlg::_Commit()
 	return !err;
 }
 
+void CPathEditorDlg::_StatusMessage(LPCWSTR Text, DWORD Style, UINT Timeout)
+{
+	constexpr DWORD STYLE_MASK = (SS_LEFT|SS_CENTER|SS_RIGHT);
+
+	// handle multiline vertical alignment
+	LONG_PTR dwStyle = ::GetWindowLongPtr(m_statusLbl.hWnd(), GWL_STYLE);
+	if (wcschr(Text, L'\n'))
+		dwStyle &= ~SS_CENTERIMAGE;
+	else
+		dwStyle |= SS_CENTERIMAGE;
+	dwStyle = (dwStyle & ~STYLE_MASK) | (Style & STYLE_MASK);
+	::SetWindowLongPtr(m_statusLbl.hWnd(), GWL_STYLE, dwStyle);
+
+	::SetWindowText(m_statusLbl.hWnd(), Text);
+	m_statusLbl.Show(SW_SHOW);
+	::SetTimer(m_hWnd, TIMERID_STATUS, Timeout, _TimerProc);
+}
+
+void CPathEditorDlg::_TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
+	UNREFERENCED_PARAMETER(uMsg);
+	UNREFERENCED_PARAMETER(dwTime);
+
+	::KillTimer(hWnd, idEvent);
+	if (idEvent == TIMERID_STATUS) {
+		auto PathEditorDlg = reinterpret_cast<CPathEditorDlg*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+		if (PathEditorDlg)
+			PathEditorDlg->m_statusLbl.Show(SW_HIDE);
+	}
+}
+
 BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
 {
 	// save interesting handles
 	m_hWnd = hWnd;
 	m_hInstance = hInstance;
+	SetWindowLongPtr(m_hWnd, GWLP_USERDATA, reinterpret_cast<ULONG_PTR>(this));
 
-	m_okBtn       .Init( ::GetDlgItem(m_hWnd, IDOK));
+	m_okBtn       .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_OK));
 	m_cancelBtn   .Init( ::GetDlgItem(m_hWnd, IDCANCEL));
 	m_gainPrivBtn .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_GAIN_PRIVILEGE));
 	m_applyBtn    .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_APPLY));
 	m_refreshBtn  .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_REFRESH));
+	m_statusLbl   .Init( ::GetDlgItem(m_hWnd, IDC_STATIC_STATUS));
 
 	m_usrGroup    .Init( ::GetDlgItem(m_hWnd, IDC_STATIC_USER));
 	m_usrAddBtn   .Init( ::GetDlgItem(m_hWnd, IDC_BUTTON_USER_ADD));
@@ -260,10 +293,10 @@ BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
 	m_bIsAdmin = IsProcessAdmin( ::GetCurrentProcess());
 	m_usrListCtrl.Init( ::GetDlgItem(m_hWnd, IDC_LIST_USER), m_hImageList,
 		HKEY_CURRENT_USER, L"Environment", L"Path");
-    if(m_bIsAdmin)
+	if(m_bIsAdmin)
 	{
-        m_gainPrivBtn.Show(SW_HIDE);
-        m_sysListCtrl.Init( ::GetDlgItem( m_hWnd, IDC_LIST_SYSTEM), m_hImageList,
+		m_gainPrivBtn.Show(SW_HIDE);
+		m_sysListCtrl.Init( ::GetDlgItem( m_hWnd, IDC_LIST_SYSTEM), m_hImageList,
 			HKEY_LOCAL_MACHINE,
 			L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
 			L"Path");
@@ -274,7 +307,7 @@ BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
 
 		m_sysListCtrl.Show(SW_HIDE);
 		m_gainPrivBtn.Show(SW_SHOW);
-		Button_SetElevationRequiredState( ::GetDlgItem( m_hWnd, IDC_BUTTON_GAIN_PRIVILEGE), TRUE);
+		Button_SetElevationRequiredState( m_gainPrivBtn.hWnd(), TRUE);
 
 		m_sysListCtrl .Enable(FALSE);
 		m_sysUpBtn    .Enable(FALSE);
@@ -334,6 +367,7 @@ BOOL CPathEditorDlg::OnSize(UINT nType, UINT width, UINT height)
 	m_sysListCtrl.MoveAndResize(m_usrListCtrl.x(), m_sysGroup.y() + LIST_MARGIN, m_usrListCtrl.w(), m_usrListCtrl.h());
 
 	m_refreshBtn.Move(m_sysGroup.x(), m_okBtn.y());
+	m_statusLbl.MoveAndResize(m_refreshBtn.x() + m_refreshBtn.w() + MARGIN, m_okBtn.y() - MARGIN / 4, m_okBtn.x() - m_refreshBtn.x() - m_refreshBtn.w() - MARGIN * 2, m_okBtn.h() + MARGIN / 2, true);
 	m_gainPrivBtn.Move((width - m_gainPrivBtn.w()) / 2, m_sysListCtrl.y() + (m_sysListCtrl.h() - m_gainPrivBtn.h()) / 2 - MARGIN);
 
 	return TRUE;
@@ -359,7 +393,17 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 	UNREFERENCED_PARAMETER(nMsg);
 	UNREFERENCED_PARAMETER(lParam);
 
-	switch(LOWORD(wParam))
+	WORD uCode = HIWORD(wParam);
+	WORD uId   = LOWORD(wParam);
+
+	// Control specific commands
+	if (uCode > 1)
+	{
+		return FALSE;
+	}
+
+	// Menu or Accelerator
+	switch(uId)
 	{
 	case IDC_BUTTON_USER_UP:
 		m_usrListCtrl.MoveUp();
@@ -403,21 +447,31 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
 	case ID_ACC_PASTE_ITEM:
 		OnPaste();
 		break;
+	case ID_ACC_EDIT_ITEM:
+		OnEdit();
+		break;
 	case IDC_BUTTON_APPLY:
-		_Commit();
+	case ID_ACC_APPLY:
+		if (_Commit()) _StatusMessage(L"Applied", SS_RIGHT);
 		break;
 	case IDC_BUTTON_REFRESH:
 	case ID_ACC_REFRESH:
-		_Reload();
+		if (_Reload()) _StatusMessage(L"Reloaded", SS_LEFT);
 		break;
 	case IDOK:
-		OnOK();
+		_StatusMessage(L"Ctrl-Enter\r\nto save and exit", SS_RIGHT);
+		break;
+	case IDC_BUTTON_OK:
+	case ID_ACC_OK:
+		if (!OnOK()) break;
 		/* fall through */
 	case IDCANCEL:
-		SendMessage( m_hWnd, WM_CLOSE, 0, 0);
-		return TRUE;
+		PostMessage(m_hWnd, WM_CLOSE, 0, 0);
+		break;
+	default:
+		return FALSE;
 	}
-	return FALSE;
+	return TRUE;
 }
 
 BOOL CPathEditorDlg::OnNotify( LPNMHDR lpNMHDR)
@@ -430,6 +484,10 @@ BOOL CPathEditorDlg::OnNotify( LPNMHDR lpNMHDR)
 	case LVN_GETDISPINFO:
 		OnListGetDispInfo(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
 		break;
+	case LVN_BEGINLABELEDIT:
+		return FALSE;
+	case LVN_ENDLABELEDIT:
+		return OnListEndLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
 	}
 	return TRUE;
 }
@@ -460,9 +518,36 @@ void CPathEditorDlg::OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate)
 	}
 }
 
+BOOL CPathEditorDlg::OnListEndLabelEdit(NMLVDISPINFO *pDispInfo)
+{
+	switch(pDispInfo->hdr.idFrom)
+	{
+	case IDC_LIST_USER:
+		return m_usrListCtrl.OnEndLabelEdit(pDispInfo);
+	case IDC_LIST_SYSTEM:
+		return m_sysListCtrl.OnEndLabelEdit(pDispInfo);
+	}
+	return FALSE;
+}
+
 BOOL CPathEditorDlg::OnOK()
 {
 	return _Commit();
+}
+
+BOOL CPathEditorDlg::OnClose()
+{
+	static LPCWSTR reqs[] = {
+		NULL,
+		L"User PATH was modified, OK to exit anyway.",
+		L"System PATH was modified, OK to exit anyway.",
+		L"Both User and System PATHs were modified, OK to exit anyway.",
+	};
+	LPCWSTR req = reqs[int(m_sysListCtrl.IsModified()) << 1 | int(m_usrListCtrl.IsModified())];
+	if (req && MessageBox( m_hWnd, req, L"Path Editor: Uncommitted changes", MB_ICONQUESTION | MB_OKCANCEL) != IDOK)
+		return FALSE;
+
+	return TRUE;
 }
 
 void CPathEditorDlg::OnCopy()
@@ -512,13 +597,22 @@ void CPathEditorDlg::OnPaste()
 		MessageBox(m_hWnd, L"The path you're trying to paste is too long", L"Path Editor", MB_ICONERROR | MB_OK);
 		return;
 	}
-	if (!IsAbsoluteLocalPathValid(Str)) {
+	if (!IsAbsoluteLocalPathValid(Str))
+	{
 		std::wstring req(L"The path doesn't seem to be a valid absolute local path:\n");
 		req += Str;
-		req += L"\nAdd it anyway?";
-		if (MessageBox(m_hWnd, req.c_str(), L"Path Editor", MB_ICONQUESTION | MB_YESNO) != IDYES)
+		req += L"\nOK to add it anyway.";
+		if (MessageBox(m_hWnd, req.c_str(), L"Path Editor", MB_ICONQUESTION | MB_OKCANCEL) != IDOK)
 			return;
 	}
 
 	list->AddPath(Str, true);
+}
+
+void CPathEditorDlg::OnEdit()
+{
+	if (m_usrListCtrl.IsSelected())
+		m_usrListCtrl.EditItem();
+	else if (m_sysListCtrl.IsSelected())
+		m_sysListCtrl.EditItem();
 }
