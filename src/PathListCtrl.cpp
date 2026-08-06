@@ -41,21 +41,21 @@ int CALLBACK BrowseCallbackProc( HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpD
 
 std::wstring CPathListCtrl::_ExpandEnvironmentStrings(const std::wstring& sVar)
 {
-	if (std::wstring::npos == sVar.find(L'%'))
-		return sVar;
+    if (std::wstring::npos == sVar.find(L'%'))
+        return sVar;
 
-	DWORD dwLen = 0;
-	dwLen = ExpandEnvironmentStrings(sVar.c_str(), nullptr, dwLen);
-	if (dwLen == 0)
-		return L"";
+    DWORD dwLen = 0;
+    dwLen = ExpandEnvironmentStrings(sVar.c_str(), nullptr, dwLen);
+    if (dwLen == 0)
+        return L"";
 
-	std::wstring strValue(dwLen, 0);
-	dwLen = ExpandEnvironmentStrings(sVar.c_str(), &strValue[0], dwLen);
-	if (dwLen == 0)
-		return L"";
+    std::wstring strValue(dwLen, 0);
+    dwLen = ExpandEnvironmentStrings(sVar.c_str(), &strValue[0], dwLen);
+    if (dwLen == 0)
+        return L"";
 
-	strValue.resize(strValue.find_first_of(L'\0'));
-	return strValue;
+    strValue.resize(strValue.find_first_of(L'\0'));
+    return strValue;
 }
 
 int CPathListCtrl::_GetImageIndex( std::wstring fname)

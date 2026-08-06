@@ -38,45 +38,45 @@ typedef std::vector<std::wstring> StringListT;
 class CPathListCtrl: public CDlgCtrl
 {
 private:
-	StringListT m_str_list;
-	CPathReader m_reader;
-	bool m_failed;
-	bool m_modified;
+    StringListT m_str_list;
+    CPathReader m_reader;
+    bool m_failed;
+    bool m_modified;
 
 private:
-	std::wstring _ExpandEnvironmentStrings(const std::wstring& sVar);
-	int _GetImageIndex( std::wstring fname);
-	bool _LoadData();
-	void _AdjustColumnWidth();
+    std::wstring _ExpandEnvironmentStrings(const std::wstring& sVar);
+    int _GetImageIndex( std::wstring fname);
+    bool _LoadData();
+    void _AdjustColumnWidth();
 
 public:
-	using CDlgCtrl::Init;
-	void Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszValueName);
-	bool Reload();
-	bool Commit();
+    using CDlgCtrl::Init;
+    void Init( HWND hWnd, HIMAGELIST hImageList, HKEY hKey, LPCTSTR lpszKeyName, LPCTSTR lpszValueName);
+    bool Reload();
+    bool Commit();
 
-	void AddPath(const std::wstring &strPath, bool insert = false);
-	void AddPath(bool insert = false);
-	void EditPath();
-	void RemovePath();
+    void AddPath(const std::wstring &strPath, bool insert = false);
+    void AddPath(bool insert = false);
+    void EditPath();
+    void RemovePath();
 
-	void MoveUp();
-	void MoveDown();
+    void MoveUp();
+    void MoveDown();
 
-	void OnDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
-	void OnGetdispinfo(NMLVDISPINFO *pDispInfo);
-	BOOL OnEndLabelEdit(NMLVDISPINFO *pDispInfo);
+    void OnDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
+    void OnGetdispinfo(NMLVDISPINFO *pDispInfo);
+    BOOL OnEndLabelEdit(NMLVDISPINFO *pDispInfo);
 
-	void Resize(LONG w, LONG h, bool redraw = false) {
-		CDlgCtrl::Resize(w, h, redraw); _AdjustColumnWidth();
-	};
-	void MoveAndResize(LONG x, LONG y, LONG w, LONG h, bool redraw = false) {
-		CDlgCtrl::MoveAndResize(x, y, w, h, redraw); _AdjustColumnWidth();
-	};
+    void Resize(LONG w, LONG h, bool redraw = false) {
+        CDlgCtrl::Resize(w, h, redraw); _AdjustColumnWidth();
+    };
+    void MoveAndResize(LONG x, LONG y, LONG w, LONG h, bool redraw = false) {
+        CDlgCtrl::MoveAndResize(x, y, w, h, redraw); _AdjustColumnWidth();
+    };
 
-	bool IsFailed()   { return m_failed; }
-	bool IsModified() { return m_modified; }
+    bool IsFailed()   { return m_failed; }
+    bool IsModified() { return m_modified; }
 
-	std::wstring GetItemPath(int iItem = -1);
-	void EditItem(int iItem = -1);
+    std::wstring GetItemPath(int iItem = -1);
+    void EditItem(int iItem = -1);
 };

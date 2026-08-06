@@ -31,57 +31,57 @@
 class CPathEditorDlg
 {
 private:
-	HWND m_hWnd;
-	HINSTANCE m_hInstance;
-	HICON m_hIcon;
-	HIMAGELIST m_hImageList;
+    HWND m_hWnd;
+    HINSTANCE m_hInstance;
+    HICON m_hIcon;
+    HIMAGELIST m_hImageList;
 
-	bool m_bIsAdmin;
+    bool m_bIsAdmin;
 
-	CDlgCtrl m_okBtn, m_cancelBtn, m_gainPrivBtn, m_applyBtn, m_refreshBtn, m_statusLbl;
-	CDlgCtrl m_usrGroup, m_usrAddBtn, m_usrEditBtn, m_usrRemoveBtn, m_usrUpBtn, m_usrDownBtn;
-	CDlgCtrl m_sysGroup, m_sysAddBtn, m_sysEditBtn, m_sysRemoveBtn, m_sysUpBtn, m_sysDownBtn;
-	CPathListCtrl m_usrListCtrl;
-	CPathListCtrl m_sysListCtrl;
+    CDlgCtrl m_okBtn, m_cancelBtn, m_gainPrivBtn, m_applyBtn, m_refreshBtn, m_statusLbl;
+    CDlgCtrl m_usrGroup, m_usrAddBtn, m_usrEditBtn, m_usrRemoveBtn, m_usrUpBtn, m_usrDownBtn;
+    CDlgCtrl m_sysGroup, m_sysAddBtn, m_sysEditBtn, m_sysRemoveBtn, m_sysUpBtn, m_sysDownBtn;
+    CPathListCtrl m_usrListCtrl;
+    CPathListCtrl m_sysListCtrl;
 
-	std::vector<HICON> m_ButtonIcons;
+    std::vector<HICON> m_ButtonIcons;
 
-	constexpr static LONG MARGIN           = 10;
-	constexpr static LONG LIST_MARGIN      = 20;
-	constexpr static LONG EDIT_BTN_POS     = 45;
-	constexpr static LONG EDIT_BTN_SPASING = 10;
-	constexpr static LONG MOVE_BTN_POS     = 90;
-	constexpr static LONG DLG_BTN_SPACING  = 30;
-	constexpr static RECT m_sizeLimits{660, 600, 0, 0};
+    constexpr static LONG MARGIN           = 10;
+    constexpr static LONG LIST_MARGIN      = 20;
+    constexpr static LONG EDIT_BTN_POS     = 45;
+    constexpr static LONG EDIT_BTN_SPASING = 10;
+    constexpr static LONG MOVE_BTN_POS     = 90;
+    constexpr static LONG DLG_BTN_SPACING  = 30;
+    constexpr static RECT m_sizeLimits{660, 600, 0, 0};
 
-	constexpr static UINT_PTR TIMERID_STATUS = 0x1;
+    constexpr static UINT_PTR TIMERID_STATUS = 0x1;
 
 private:
-	BOOL _CenterWindow();
-	BOOL _CreateImageList();
-	BOOL _SetButtonIcons();
-	BOOL _Reload();
-	BOOL _Commit();
-	void _StatusMessage(LPCWSTR Text, DWORD Style = 0, UINT Timeout = 3000);
+    BOOL _CenterWindow();
+    BOOL _CreateImageList();
+    BOOL _SetButtonIcons();
+    BOOL _Reload();
+    BOOL _Commit();
+    void _StatusMessage(LPCWSTR Text, DWORD Style = 0, UINT Timeout = 3000);
 
-	static void _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+    static void _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 public:
-	CPathEditorDlg();
-	~CPathEditorDlg();
-	BOOL OnInitDialog( HINSTANCE hInstance, HWND hWnd);
-	BOOL OnMinMaxInfo(LPMINMAXINFO mmi);
-	BOOL OnSize(UINT nType, UINT width, UINT height);
-	BOOL OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam);
-	BOOL OnNotify(LPNMHDR lpNMHDR);
-	BOOL OnOK();
-	BOOL OnClose();
-	void OnButtonGainPrivilege();
-	void OnListGetDispInfo(NMLVDISPINFO *pDispInfo);
-	void OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
-	BOOL OnListEndLabelEdit(NMLVDISPINFO *pDispInfo);
-	void OnCopy();
-	void OnCut();
-	void OnPaste();
-	void OnEdit();
+    CPathEditorDlg();
+    ~CPathEditorDlg();
+    BOOL OnInitDialog( HINSTANCE hInstance, HWND hWnd);
+    BOOL OnMinMaxInfo(LPMINMAXINFO mmi);
+    BOOL OnSize(UINT nType, UINT width, UINT height);
+    BOOL OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam);
+    BOOL OnNotify(LPNMHDR lpNMHDR);
+    BOOL OnOK();
+    BOOL OnClose();
+    void OnButtonGainPrivilege();
+    void OnListGetDispInfo(NMLVDISPINFO *pDispInfo);
+    void OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
+    BOOL OnListEndLabelEdit(NMLVDISPINFO *pDispInfo);
+    void OnCopy();
+    void OnCut();
+    void OnPaste();
+    void OnEdit();
 };
