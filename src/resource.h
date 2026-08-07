@@ -41,13 +41,15 @@
 #define ID_ACC_EDIT_ITEM                32775
 #define ID_ACC_OK                       32776
 #define ID_ACC_APPLY                    32777
+#define ID_ACC_INSERT_ITEM              32778
+#define ID_ACC_DELETE_ITEM              32779
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
-#define _APS_NEXT_COMMAND_VALUE         32778
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           103
 #endif

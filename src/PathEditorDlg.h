@@ -27,6 +27,7 @@
 #include <utility>
 #include "PathListCtrl.h"
 #include <vector>
+#include <functional>
 
 class CPathEditorDlg
 {
@@ -63,6 +64,8 @@ private:
     BOOL _Reload();
     BOOL _Commit();
     void _StatusMessage(LPCWSTR Text, DWORD Style = 0, UINT Timeout = 3000);
+    using ListViewAction = std::function<void(CPathEditorDlg&, CPathListCtrl&)>;
+    void _ListViewDispatch(ListViewAction Action);
 
     static void _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
@@ -80,8 +83,7 @@ public:
     void OnListGetDispInfo(NMLVDISPINFO *pDispInfo);
     void OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
     BOOL OnListEndLabelEdit(NMLVDISPINFO *pDispInfo);
-    void OnCopy();
-    void OnCut();
-    void OnPaste();
-    void OnEdit();
+
+    void OnCut(CPathListCtrl &ListCtrl);
+    void OnPaste(CPathListCtrl &ListCtrl);
 };

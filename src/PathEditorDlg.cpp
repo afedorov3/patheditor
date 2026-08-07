@@ -239,6 +239,12 @@ void CPathEditorDlg::_StatusMessage(LPCWSTR Text, DWORD Style, UINT Timeout)
     ::SetTimer(m_hWnd, TIMERID_STATUS, Timeout, _TimerProc);
 }
 
+void CPathEditorDlg::_ListViewDispatch(ListViewAction Action)
+{
+    if      (m_usrListCtrl.IsSelected()) Action(*this, m_usrListCtrl);
+    else if (m_sysListCtrl.IsSelected()) Action(*this, m_sysListCtrl);
+}
+
 void CPathEditorDlg::_TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
     UNREFERENCED_PARAMETER(uMsg);
@@ -439,16 +445,22 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
         OnButtonGainPrivilege();
         break;
     case ID_ACC_COPY_ITEM:
-        OnCopy();
+        _ListViewDispatch([](auto&, auto &lv) { Str2Clipboard(lv.GetItemPath()); });
         break;
     case ID_ACC_CUT_ITEM:
-        OnCut();
+        _ListViewDispatch(&CPathEditorDlg::OnCut);
         break;
     case ID_ACC_PASTE_ITEM:
-        OnPaste();
+        _ListViewDispatch(&CPathEditorDlg::OnPaste);
         break;
     case ID_ACC_EDIT_ITEM:
-        OnEdit();
+        _ListViewDispatch([](auto&, auto &lv) { lv.EditItem(); });
+        break;
+    case ID_ACC_INSERT_ITEM:
+        _ListViewDispatch([](auto&, auto &lv) { lv.AddPath(true); });
+        break;
+    case ID_ACC_DELETE_ITEM:
+        _ListViewDispatch([](auto&, auto &lv) { lv.RemovePath(); });
         break;
     case IDC_BUTTON_APPLY:
     case ID_ACC_APPLY:
@@ -550,41 +562,16 @@ BOOL CPathEditorDlg::OnClose()
     return TRUE;
 }
 
-void CPathEditorDlg::OnCopy()
+void CPathEditorDlg::OnCut(CPathListCtrl &ListCtrl)
 {
-    if (m_usrListCtrl.IsSelected())
-        Str2Clipboard(m_usrListCtrl.GetItemPath());
-    else if (m_sysListCtrl.IsSelected())
-        Str2Clipboard(m_sysListCtrl.GetItemPath());
+    auto Item = ListCtrl.GetItemPath();
+    if (Item.empty()) return;
+    if (Str2Clipboard(Item))
+        ListCtrl.RemovePath();
 }
 
-void CPathEditorDlg::OnCut()
+void CPathEditorDlg::OnPaste(CPathListCtrl &ListCtrl)
 {
-    if (m_usrListCtrl.IsSelected())
-    {
-        auto Item = m_usrListCtrl.GetItemPath();
-        if (Item.empty()) return;
-        if (Str2Clipboard(Item))
-            m_usrListCtrl.RemovePath();
-    }
-    else if (m_sysListCtrl.IsSelected())
-    {
-        auto Item = m_sysListCtrl.GetItemPath();
-        if (Item.empty()) return;
-        if (Str2Clipboard(Item))
-            m_sysListCtrl.RemovePath();
-    }
-}
-
-void CPathEditorDlg::OnPaste()
-{
-    CPathListCtrl *list = nullptr;
-    if (m_usrListCtrl.IsSelected())
-        list = &m_usrListCtrl;
-    else if (m_sysListCtrl.IsSelected())
-        list = &m_sysListCtrl;
-    if (list == nullptr) return;
-
     std::wstring Str;
     if (!Clipboard2Str(Str)) return;
 
@@ -606,13 +593,5 @@ void CPathEditorDlg::OnPaste()
             return;
     }
 
-    list->AddPath(Str, true);
-}
-
-void CPathEditorDlg::OnEdit()
-{
-    if (m_usrListCtrl.IsSelected())
-        m_usrListCtrl.EditItem();
-    else if (m_sysListCtrl.IsSelected())
-        m_sysListCtrl.EditItem();
+    ListCtrl.AddPath(Str, true);
 }
