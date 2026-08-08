@@ -59,12 +59,12 @@ public:
     void AddPath(bool insert = false);
     void EditPath();
     void RemovePath();
-
     void MoveUp();
     void MoveDown();
 
     void OnDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
     void OnGetdispinfo(NMLVDISPINFO *pDispInfo);
+    BOOL OnBeginLabelEdit(NMLVDISPINFO *pDispInfo);
     BOOL OnEndLabelEdit(NMLVDISPINFO *pDispInfo);
 
     void Resize(LONG w, LONG h, bool redraw = false) {
@@ -77,6 +77,8 @@ public:
     bool IsFailed()   { return m_failed; }
     bool IsModified() { return m_modified; }
 
+    void SelectItem(int iItem = -1, bool select = true);
     std::wstring GetItemPath(int iItem = -1);
     void EditItem(int iItem = -1);
+    void FinishEditItem();
 };

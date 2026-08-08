@@ -14,5 +14,21 @@ The default environment editor is not great at editing PATH if there are lot of 
 * Window resizing
 * Apply/Reload
 * Insert after selected (Shift+Add)
-* Hotkeys: Copy (Ctrl+C Ctrl+Ins), Cut (Ctrl+X Shift+Del), Paste (Ctrl+V Shift+Ins)
-
+* Clipboard operations
+* Manual in-place edit
+* Hotkeys:
+  | Hotkeys            | Action            |
+  |--------------------|-------------------|
+  |       (Ctrl+Enter) | Commit and exit   |
+  |      (Shift+Enter) | Commit            |
+  |               (F5) | Reload            |
+  |         (Ctrl+Tab) | Switch b/w Lists  |
+  |                    |                   |
+  |  (Ctrl+C Ctrl+Ins) | Copy item         |
+  | (Ctrl+X Shift+Del) | Cut item          |
+  | (Ctrl+V Shift+Ins) | Paste item        |
+  |               (F2) | Manual edit       |
+  |              (Ins) | Add item (Dialog) |
+  |              (Del) | Remove item       |
+  |          (Ctrl+Up) | Move item up      |
+  |         (Ctr+Down) | Move item down    |

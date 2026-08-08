@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define NOMINMAX
 #include "PathListCtrl.h"
 #include <shlobj.h>
 #include <algorithm>
@@ -215,18 +216,6 @@ void CPathListCtrl::EditPath()
     }
 }
 
-void CPathListCtrl::OnDoubleClick( LPNMITEMACTIVATE lpNMItemActivate)
-{
-    int iItem = lpNMItemActivate->iItem;
-    if( iItem == -1)
-        return;
-
-    std::wstring pathName = _ExpandEnvironmentStrings(m_str_list[iItem]);
-    if (GetFileAttributes(pathName.c_str()) == INVALID_FILE_ATTRIBUTES)
-        return;
-    ShellExecute(0, L"open", pathName.c_str(), 0, 0, SW_NORMAL);
-}
-
 void CPathListCtrl::RemovePath()
 {
     int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
@@ -244,6 +233,46 @@ void CPathListCtrl::RemovePath()
     _AdjustColumnWidth();
 }
 
+void CPathListCtrl::MoveUp()
+{
+    int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
+    if( iItem == -1 || iItem == 0)
+        return;
+
+    m_str_list[iItem].swap( m_str_list[iItem - 1]), m_modified = true;
+    ListView_Update( m_hWnd, iItem);
+    ListView_Update( m_hWnd, iItem - 1);
+    ListView_SetItemState( m_hWnd, iItem - 1,
+        LVNI_SELECTED | LVIS_FOCUSED, LVNI_SELECTED | LVIS_FOCUSED);
+    ListView_EnsureVisible( m_hWnd, iItem - 1, FALSE);
+}
+
+void CPathListCtrl::MoveDown()
+{
+    int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
+    if( iItem == -1 || ( iItem == int( m_str_list.size() - 1)))
+        return;
+
+    m_str_list[iItem].swap( m_str_list[iItem + 1]), m_modified = true;
+    ListView_Update( m_hWnd, iItem);
+    ListView_Update( m_hWnd, iItem + 1);
+    ListView_SetItemState( m_hWnd, iItem + 1,
+        LVNI_SELECTED | LVIS_FOCUSED, LVNI_SELECTED | LVIS_FOCUSED);
+    ListView_EnsureVisible( m_hWnd, iItem + 1, FALSE);
+}
+
+void CPathListCtrl::OnDoubleClick( LPNMITEMACTIVATE lpNMItemActivate)
+{
+    int iItem = lpNMItemActivate->iItem;
+    if( iItem == -1)
+        return;
+
+    std::wstring pathName = _ExpandEnvironmentStrings(m_str_list[iItem]);
+    if (GetFileAttributes(pathName.c_str()) == INVALID_FILE_ATTRIBUTES)
+        return;
+    ShellExecute(0, L"open", pathName.c_str(), 0, 0, SW_NORMAL);
+}
+
 void CPathListCtrl::OnGetdispinfo( NMLVDISPINFO *pDispInfo)
 {
     if( pDispInfo->item.mask & LVIF_TEXT)
@@ -257,6 +286,13 @@ void CPathListCtrl::OnGetdispinfo( NMLVDISPINFO *pDispInfo)
 
     if( pDispInfo->item.mask & LVIF_IMAGE)
         pDispInfo->item.iImage = _GetImageIndex( m_str_list[pDispInfo->item.iItem]);
+}
+
+BOOL CPathListCtrl::OnBeginLabelEdit( NMLVDISPINFO *pDispInfo)
+{
+    UNREFERENCED_PARAMETER(pDispInfo);
+
+    return FALSE;
 }
 
 BOOL CPathListCtrl::OnEndLabelEdit( NMLVDISPINFO *pDispInfo)
@@ -273,30 +309,15 @@ BOOL CPathListCtrl::OnEndLabelEdit( NMLVDISPINFO *pDispInfo)
     return FALSE;
 }
 
-void CPathListCtrl::MoveUp()
+void CPathListCtrl::SelectItem(int iItem, bool select)
 {
-    int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
-    if( iItem == -1 || iItem == 0)
-        return;
+    if (m_str_list.size() == 0) return;
 
-    m_str_list[iItem].swap( m_str_list[iItem - 1]), m_modified = true;
-    ListView_Update( m_hWnd, iItem);
-    ListView_Update( m_hWnd, iItem - 1);
-    ListView_SetItemState( m_hWnd, iItem - 1, LVNI_SELECTED, LVNI_SELECTED);
-    ListView_EnsureVisible( m_hWnd, iItem - 1, FALSE);
-}
-
-void CPathListCtrl::MoveDown()
-{
-    int iItem = ListView_GetNextItem( m_hWnd, -1, LVNI_SELECTED);
-    if( iItem == -1 || ( iItem == int( m_str_list.size() - 1)))
-        return;
-
-    m_str_list[iItem].swap( m_str_list[iItem + 1]), m_modified = true;
-    ListView_Update( m_hWnd, iItem);
-    ListView_Update( m_hWnd, iItem + 1);
-    ListView_SetItemState( m_hWnd, iItem + 1, LVNI_SELECTED, LVNI_SELECTED);
-    ListView_EnsureVisible( m_hWnd, iItem + 1, FALSE);
+    iItem = std::max(-1, std::min(iItem, int( m_str_list.size() - 1)));
+    ListView_SetItemState( m_hWnd, iItem,
+        select ? LVNI_SELECTED | LVIS_FOCUSED : 0, LVNI_SELECTED | LVIS_FOCUSED);
+    if (iItem != -1)
+        ListView_EnsureVisible( m_hWnd, iItem, FALSE);
 }
 
 std::wstring CPathListCtrl::GetItemPath(int iItem)
@@ -319,4 +340,10 @@ void CPathListCtrl::EditItem(int iItem)
     if (iItem < 0) return;
 
     ListView_EditLabel(m_hWnd, iItem);
+}
+
+void CPathListCtrl::FinishEditItem()
+{
+    ::SetFocus(m_hWnd);
+    ListView_EditLabel(m_hWnd, -1);
 }

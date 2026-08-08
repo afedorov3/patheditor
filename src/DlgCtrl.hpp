@@ -38,8 +38,9 @@ public:
     };
     virtual void Show(int nCmdShow = SW_SHOW) { ::ShowWindow( m_hWnd, nCmdShow); }
     virtual void Enable(bool bEnable = true)  { ::EnableWindow( m_hWnd, bEnable); }
-    virtual bool IsSelected() { return ::GetFocus() == m_hWnd; }
+    virtual bool IsFocused() { return ::GetFocus() == m_hWnd; }
     virtual void Redraw() { RedrawWindow(m_hWnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE); }
+    virtual void Focus() { ::SetFocus(m_hWnd); }
     LONG x() { return m_x; }
     LONG y() { return m_y; }
     LONG w() { return m_w; }

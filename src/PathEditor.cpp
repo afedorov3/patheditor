@@ -28,6 +28,8 @@
 #include "resource.h"
 #include "PathEditorDlg.h"
 
+CPathEditorDlg theDialog;
+
 INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
@@ -44,7 +46,8 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     MSG msg;
     while(GetMessage(&msg, 0, 0, 0) == TRUE)
     {
-        if(!TranslateAccelerator(hWnd, hAccelTable, &msg) && !IsDialogMessage(hWnd, &msg))
+        BOOL translated = TranslateAccelerator(hWnd, hAccelTable, &msg);
+        if( (!theDialog.AccHit() && !IsDialogMessage(hWnd, &msg)) && !translated)
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -53,7 +56,6 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     return 0;
 }
 
-CPathEditorDlg theDialog;
 INT_PTR CALLBACK DialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)

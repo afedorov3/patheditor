@@ -115,9 +115,12 @@ END
 
 IDR_ACCELERATORS ACCELERATORS
 BEGIN
+// generic dialog hotkeys
     VK_RETURN,      ID_ACC_OK,              VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      ID_ACC_APPLY,           VIRTKEY, SHIFT,   NOINVERT
     VK_F5,          ID_ACC_REFRESH,         VIRTKEY,          NOINVERT
+    VK_TAB,         ID_ACC_LIST_TOGGLE,     VIRTKEY, CONTROL, NOINVERT
+// ListView item hotkeys
     "C",            ID_ACC_COPY_ITEM,       VIRTKEY, CONTROL, NOINVERT
     VK_INSERT,      ID_ACC_COPY_ITEM,       VIRTKEY, CONTROL, NOINVERT
     "X",            ID_ACC_CUT_ITEM,        VIRTKEY, CONTROL, NOINVERT
@@ -127,6 +130,8 @@ BEGIN
     VK_F2,          ID_ACC_EDIT_ITEM,       VIRTKEY,          NOINVERT
     VK_INSERT,      ID_ACC_INSERT_ITEM,     VIRTKEY,          NOINVERT
     VK_DELETE,      ID_ACC_DELETE_ITEM,     VIRTKEY,          NOINVERT
+    VK_UP,          ID_ACC_MOVEUP_ITEM,     VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_ACC_MOVEDN_ITEM,     VIRTKEY, CONTROL, NOINVERT
 END
 
 /////////////////////////////////////////////////////////////////////////////

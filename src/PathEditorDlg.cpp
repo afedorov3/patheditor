@@ -239,10 +239,16 @@ void CPathEditorDlg::_StatusMessage(LPCWSTR Text, DWORD Style, UINT Timeout)
     ::SetTimer(m_hWnd, TIMERID_STATUS, Timeout, _TimerProc);
 }
 
-void CPathEditorDlg::_ListViewDispatch(ListViewAction Action)
-{
-    if      (m_usrListCtrl.IsSelected()) Action(*this, m_usrListCtrl);
-    else if (m_sysListCtrl.IsSelected()) Action(*this, m_sysListCtrl);
+template <typename CbT, typename... Args>
+bool CPathEditorDlg::_ListViewDispatch(CbT&& memberCallback, Args&&... args) {
+    if (m_usrListCtrl.IsFocused())
+        std::invoke(std::forward<CbT>(memberCallback), *this, m_usrListCtrl, std::forward<Args>(args)...);
+    else if (m_sysListCtrl.IsFocused())
+        std::invoke(std::forward<CbT>(memberCallback), *this, m_sysListCtrl, std::forward<Args>(args)...);
+    else
+        return false;
+
+    return true;
 }
 
 void CPathEditorDlg::_TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
@@ -336,6 +342,10 @@ BOOL CPathEditorDlg::OnInitDialog( HINSTANCE hInstance, HWND hWnd)
     if( _CenterWindow() == FALSE)
         return FALSE;
 
+    m_usrListCtrl.Focus();
+    m_usrListCtrl.SelectItem(0);
+    m_sysListCtrl.SelectItem(0);
+
     return TRUE;
 }
 
@@ -347,9 +357,9 @@ BOOL CPathEditorDlg::OnMinMaxInfo(LPMINMAXINFO mmi)
     return TRUE;
 }
 
-BOOL CPathEditorDlg::OnSize(UINT nType, UINT width, UINT height)
+BOOL CPathEditorDlg::OnSize(UINT uType, UINT width, UINT height)
 {
-    UNREFERENCED_PARAMETER(nType);
+    UNREFERENCED_PARAMETER(uType);
 
     // order is important
     m_okBtn.Move((width - m_okBtn.w() - m_applyBtn.w() - m_cancelBtn.w() - DLG_BTN_SPACING * 2) / 2, height - MARGIN - m_okBtn.h());
@@ -394,15 +404,15 @@ void CPathEditorDlg::OnButtonGainPrivilege()
         SendMessage( m_hWnd, WM_CLOSE, 0, 0);
 }
 
-BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
+BOOL CPathEditorDlg::OnCommand( UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(nMsg);
+    UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(lParam);
 
     WORD uCode = HIWORD(wParam);
     WORD uId   = LOWORD(wParam);
 
-    // Control specific commands
+    /* Control specific commands */
     if (uCode > 1)
     {
         return FALSE;
@@ -445,42 +455,59 @@ BOOL CPathEditorDlg::OnCommand( UINT nMsg, WPARAM wParam, LPARAM lParam)
         OnButtonGainPrivilege();
         break;
     case ID_ACC_COPY_ITEM:
-        _ListViewDispatch([](auto&, auto &lv) { Str2Clipboard(lv.GetItemPath()); });
+        m_accHit = _ListViewDispatch([](auto&, auto &lv) { Str2Clipboard(lv.GetItemPath()); });
         break;
     case ID_ACC_CUT_ITEM:
-        _ListViewDispatch(&CPathEditorDlg::OnCut);
+        m_accHit = _ListViewDispatch(&CPathEditorDlg::OnCut);
         break;
     case ID_ACC_PASTE_ITEM:
-        _ListViewDispatch(&CPathEditorDlg::OnPaste);
+        m_accHit = _ListViewDispatch(&CPathEditorDlg::OnPaste);
         break;
     case ID_ACC_EDIT_ITEM:
-        _ListViewDispatch([](auto&, auto &lv) { lv.EditItem(); });
+        m_accHit = _ListViewDispatch([](auto&, auto &lv) { lv.EditItem(); });
         break;
     case ID_ACC_INSERT_ITEM:
-        _ListViewDispatch([](auto&, auto &lv) { lv.AddPath(true); });
+        m_accHit = _ListViewDispatch([](auto&, auto &lv) { lv.AddPath(true); });
         break;
     case ID_ACC_DELETE_ITEM:
-        _ListViewDispatch([](auto&, auto &lv) { lv.RemovePath(); });
+        m_accHit = _ListViewDispatch([](auto&, auto &lv) { lv.RemovePath(); });
         break;
-    case IDC_BUTTON_APPLY:
+    case ID_ACC_MOVEUP_ITEM:
+        m_accHit = _ListViewDispatch([](auto&, auto &lv) { lv.MoveUp(); });
+        break;
+    case ID_ACC_MOVEDN_ITEM:
+        m_accHit = _ListViewDispatch([](auto&, auto &lv) { lv.MoveDown(); });
+        break;
     case ID_ACC_APPLY:
+        m_accHit = TRUE;
+    case IDC_BUTTON_APPLY:
         if (_Commit()) _StatusMessage(L"Applied", SS_RIGHT);
         break;
-    case IDC_BUTTON_REFRESH:
     case ID_ACC_REFRESH:
+        m_accHit = TRUE;
+    case IDC_BUTTON_REFRESH:
         if (_Reload()) _StatusMessage(L"Reloaded", SS_LEFT);
+        break;
+    case ID_ACC_LIST_TOGGLE:
+        if (m_usrListCtrl.IsFocused()) m_sysListCtrl.Focus(); else m_usrListCtrl.Focus();
+        m_accHit = TRUE;
         break;
     case IDOK:
         _StatusMessage(L"Ctrl-Enter\r\nto save and exit", SS_RIGHT);
         break;
-    case IDC_BUTTON_OK:
     case ID_ACC_OK:
+        m_usrListCtrl.FinishEditItem();
+        m_sysListCtrl.FinishEditItem();
+        m_accHit = TRUE;
+        /* fall through */
+    case IDC_BUTTON_OK:
         if (!OnOK()) break;
         /* fall through */
     case IDCANCEL:
         PostMessage(m_hWnd, WM_CLOSE, 0, 0);
         break;
     default:
+        /* not handled */
         return FALSE;
     }
     return TRUE;
@@ -497,7 +524,7 @@ BOOL CPathEditorDlg::OnNotify( LPNMHDR lpNMHDR)
         OnListGetDispInfo(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
         break;
     case LVN_BEGINLABELEDIT:
-        return FALSE;
+        return OnListBeginLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
     case LVN_ENDLABELEDIT:
         return OnListEndLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
     }
@@ -528,6 +555,18 @@ void CPathEditorDlg::OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate)
         m_sysListCtrl.OnDoubleClick(lpNMItemActivate);
         break;
     }
+}
+
+BOOL CPathEditorDlg::OnListBeginLabelEdit(NMLVDISPINFO *pDispInfo)
+{
+    switch(pDispInfo->hdr.idFrom)
+    {
+    case IDC_LIST_USER:
+        return m_usrListCtrl.OnBeginLabelEdit(pDispInfo);
+    case IDC_LIST_SYSTEM:
+        return m_sysListCtrl.OnBeginLabelEdit(pDispInfo);
+    }
+    return TRUE;
 }
 
 BOOL CPathEditorDlg::OnListEndLabelEdit(NMLVDISPINFO *pDispInfo)

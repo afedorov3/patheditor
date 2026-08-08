@@ -38,6 +38,7 @@ private:
     HIMAGELIST m_hImageList;
 
     bool m_bIsAdmin;
+    bool m_accHit;
 
     CDlgCtrl m_okBtn, m_cancelBtn, m_gainPrivBtn, m_applyBtn, m_refreshBtn, m_statusLbl;
     CDlgCtrl m_usrGroup, m_usrAddBtn, m_usrEditBtn, m_usrRemoveBtn, m_usrUpBtn, m_usrDownBtn;
@@ -64,8 +65,9 @@ private:
     BOOL _Reload();
     BOOL _Commit();
     void _StatusMessage(LPCWSTR Text, DWORD Style = 0, UINT Timeout = 3000);
-    using ListViewAction = std::function<void(CPathEditorDlg&, CPathListCtrl&)>;
-    void _ListViewDispatch(ListViewAction Action);
+
+    template <typename CbT, typename... Args>
+    bool _ListViewDispatch(CbT&& memberCallback, Args&&... args);
 
     static void _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
@@ -74,14 +76,16 @@ public:
     ~CPathEditorDlg();
     BOOL OnInitDialog( HINSTANCE hInstance, HWND hWnd);
     BOOL OnMinMaxInfo(LPMINMAXINFO mmi);
-    BOOL OnSize(UINT nType, UINT width, UINT height);
-    BOOL OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam);
+    BOOL OnSize(UINT uType, UINT width, UINT height);
+    BOOL OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    bool AccHit() { bool hit = m_accHit; m_accHit = false; return hit; }
     BOOL OnNotify(LPNMHDR lpNMHDR);
     BOOL OnOK();
     BOOL OnClose();
     void OnButtonGainPrivilege();
     void OnListGetDispInfo(NMLVDISPINFO *pDispInfo);
     void OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
+    BOOL OnListBeginLabelEdit(NMLVDISPINFO *pDispInfo);
     BOOL OnListEndLabelEdit(NMLVDISPINFO *pDispInfo);
 
     void OnCut(CPathListCtrl &ListCtrl);
