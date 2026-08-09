@@ -4,6 +4,8 @@ project(PathEditor VERSION 1.0 DESCRIPTION "Windows Path Environment Editor" LAN
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR})
+
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_executable(PathEditor WIN32 
@@ -23,3 +25,4 @@ target_compile_options(PathEditor PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:  /W4  >
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:  -Wall -Wextra  >
 )
+install(TARGETS PathEditor)
