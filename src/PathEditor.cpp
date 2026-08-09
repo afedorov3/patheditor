@@ -37,6 +37,8 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATORS));
 
     HWND hWnd = CreateDialogParam( hInstance, MAKEINTRESOURCE(IDD_PATHEDITOR_DIALOG), 0,
@@ -53,6 +55,9 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
             DispatchMessage(&msg);
         }
     }
+
+    CoUninitialize();
+
     return 0;
 }
 

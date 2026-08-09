@@ -25,20 +25,11 @@
  */
 
 #define NOMINMAX
-#include "PathListCtrl.h"
-#include <shlobj.h>
+
 #include <algorithm>
-#include <iterator>
-#include "resource.h"
 
-int CALLBACK BrowseCallbackProc( HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
-{
-    UNREFERENCED_PARAMETER(lParam);
-
-    if( uMsg == BFFM_INITIALIZED)
-        SendMessage( hWnd, BFFM_SETSELECTION, TRUE, lpData);
-    return 0;
-}
+#include "PathListCtrl.h"
+#include "Util.h"
 
 std::wstring CPathListCtrl::_ExpandEnvironmentStrings(const std::wstring& sVar)
 {
@@ -173,19 +164,10 @@ void CPathListCtrl::AddPath(const std::wstring &strPath, bool insert)
 
 void CPathListCtrl::AddPath(bool insert)
 {
-    BROWSEINFO bi{ };
-    bi.hwndOwner = GetParent(m_hWnd);
-    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI | BIF_NEWDIALOGSTYLE;
-    PIDLIST_ABSOLUTE strList = SHBrowseForFolder( &bi);
-    if( strList)
-    {
-        std::wstring strPath(MAX_PATH, 0);
-        SHGetPathFromIDList(strList, &strPath[0]);
-        strPath.resize(strPath.find_first_of(L'\0'));
-        ::CoTaskMemFree(strList);
-
+    std::wstring strPath;
+    auto hRes = PickFolderDlg(GetAncestor(m_hWnd, GA_ROOT), strPath, FOS_FORCEFILESYSTEM);
+    if( SUCCEEDED(hRes))
         AddPath(strPath, insert);
-    }
 }
 
 void CPathListCtrl::EditPath()
@@ -194,24 +176,11 @@ void CPathListCtrl::EditPath()
     if( iItem == -1)
         return;
 
-    BROWSEINFO bi{ };
-    bi.hwndOwner = GetParent(m_hWnd);
-    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_EDITBOX | BIF_USENEWUI | BIF_NEWDIALOGSTYLE;
-    bi.lpfn = BrowseCallbackProc;
-
-    std::wstring pathName = _ExpandEnvironmentStrings(m_str_list[iItem]);
-    bi.lParam = reinterpret_cast<LPARAM>(pathName.c_str());
-
-    PIDLIST_ABSOLUTE strList = SHBrowseForFolder( &bi);
-    if( strList)
+    std::wstring strPath = _ExpandEnvironmentStrings(m_str_list[iItem]);
+    auto hRes = PickFolderDlg(GetAncestor(m_hWnd, GA_ROOT), strPath, FOS_FORCEFILESYSTEM, strPath, true);
+    if( SUCCEEDED(hRes))
     {
-        pathName.clear();
-        pathName.resize(MAX_PATH, 0);
-        SHGetPathFromIDList(strList, &pathName[0]);
-        pathName.resize(pathName.find_first_of(L'\0'));
-        ::CoTaskMemFree(strList);
-
-        m_str_list[iItem] = pathName, m_modified = true;
+        m_str_list[iItem] = strPath, m_modified = true;
         ListView_Update( m_hWnd, iItem);
     }
 }

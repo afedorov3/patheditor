@@ -26,6 +26,7 @@
 
 #include <windows.h>
 #include <utility>
+#include <shobjidl_core.h>
 
 // Check if current process has admin access
 // pair.first  indicates elevated admin
@@ -34,3 +35,5 @@ bool IsProcessAdmin( HANDLE hProcess);
 bool Str2Clipboard( const std::wstring &Str);
 bool Clipboard2Str( std::wstring &Str);
 bool IsAbsoluteLocalPathValid( const std::wstring &Path);
+HRESULT PickFolderDlg(HWND Owner, std::wstring &Path, FILEOPENDIALOGOPTIONS Options = 0,
+                  std::wstring const &DefFolder = {}, bool ForceDefFolder = false);

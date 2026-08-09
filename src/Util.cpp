@@ -184,3 +184,110 @@ bool IsAbsoluteLocalPathValid( const std::wstring &Path)
 
     return true;
 }
+
+#ifdef PICKFOLDER_FALLBACK
+#include <shlobj_core.h>
+
+#pragma comment(lib, "ComDlg32.Lib")
+
+static int CALLBACK _BrowseForFolderCbProc(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+    UNREFERENCED_PARAMETER(lParam);
+
+    if (uMsg == BFFM_INITIALIZED && lpData != 0)
+        SendMessage(hWnd, BFFM_SETSELECTION, TRUE, lpData);
+    return 0;
+}
+
+static HRESULT _PickFolderDlgCompat(HWND Owner, std::wstring &Path, FILEOPENDIALOGOPTIONS Options,
+                  std::wstring const &InitialFolder)
+{
+    BROWSEINFO bi{ };
+    bi.hwndOwner = Owner;
+    bi.ulFlags = BIF_EDITBOX | BIF_NEWDIALOGSTYLE;
+    if (Options & FOS_FORCEFILESYSTEM)
+        bi.ulFlags |= BIF_RETURNONLYFSDIRS;
+
+    if (!InitialFolder.empty()) {
+        bi.lpfn = _BrowseForFolderCbProc;
+        bi.lParam = reinterpret_cast<LPARAM>(InitialFolder.c_str());
+    }
+
+    PIDLIST_ABSOLUTE strList = SHBrowseForFolder(&bi);
+    if (strList == NULL) return HRESULT_FROM_WIN32(ERROR_CANCELLED);
+
+    HRESULT hRes = S_OK;
+    Path.resize(MAX_PATH, L'\0');
+    if (!SHGetPathFromIDList(strList, &Path[0])) hRes = E_FAIL;
+    Path.resize(Path.find_first_of(L'\0'));
+    CoTaskMemFree(strList);
+
+    return hRes;
+}
+#endif // PICKFOLDER_FALLBACK
+
+#pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "Ole32.lib")
+
+HRESULT PickFolderDlg(HWND Owner, std::wstring &Path, FILEOPENDIALOGOPTIONS Options,
+                  std::wstring const &DefFolder, bool ForceDefFolder)
+{
+    HRESULT hRes;
+    IFileOpenDialog *pFileDlg;
+
+    hRes = CoCreateInstance(CLSID_FileOpenDialog, nullptr,
+        CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFileDlg));
+    if (!SUCCEEDED(hRes))
+    {
+#ifdef PICKFOLDER_FALLBACK
+        hRes = _PickFolderDlgCompat(Owner, Path, Options, ForceDefFolder ? DefFolder : std::wstring {});
+#endif // PICKFOLDER_FALLBACK
+        return hRes;
+    }
+
+    do
+    {
+        Options &= ~FOS_ALLOWMULTISELECT;
+        FILEOPENDIALOGOPTIONS fosOptions = 0;
+        pFileDlg->GetOptions(&fosOptions);
+        fosOptions |= FOS_PICKFOLDERS | Options;
+        hRes = pFileDlg->SetOptions(fosOptions);
+        if (!SUCCEEDED(hRes)) break;
+
+        if (!DefFolder.empty())
+        {
+            IShellItem *pItem = nullptr;
+            SHCreateItemFromParsingName(DefFolder.c_str(), nullptr, IID_PPV_ARGS(&pItem));
+            if (pItem)
+            {
+                if (ForceDefFolder)
+                    pFileDlg->SetFolder(pItem);
+                else
+                    pFileDlg->SetDefaultFolder(pItem);
+
+                pItem->Release();
+            } // Don't fail if the initial folder couldn't be set 
+        }
+
+        hRes = pFileDlg->Show(Owner);
+        if (!SUCCEEDED(hRes)) break;
+
+        IShellItem *pItem;
+        hRes = pFileDlg->GetResult(&pItem);
+        if (!SUCCEEDED(hRes)) break;
+
+        SIGDN sigdnName = (fosOptions & FOS_FORCEFILESYSTEM) != 0 ?
+                          SIGDN_FILESYSPATH : SIGDN_DESKTOPABSOLUTEPARSING;
+        LPWSTR strName;
+        hRes = pItem->GetDisplayName(sigdnName, &strName);
+        if (SUCCEEDED(hRes))
+        {
+            Path = strName;
+            CoTaskMemFree(strName);
+        }
+        pItem->Release();
+    } while(false);
+    pFileDlg->Release();
+
+    return hRes;
+}

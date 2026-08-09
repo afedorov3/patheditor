@@ -18,7 +18,7 @@ add_executable(PathEditor WIN32
 )
 
 target_include_directories(PathEditor PRIVATE ../src)
-target_compile_definitions(PathEditor PRIVATE UNICODE _UNICODE)
+target_compile_definitions(PathEditor PRIVATE UNICODE _UNICODE PICKFOLDER_FALLBACK)
 target_compile_options(PathEditor PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:  /W4  >
     $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:  -Wall -Wextra  >

@@ -255,7 +255,7 @@ BOOL CPathEditorDlg::_ListViewDispatch(ListViewNotify Notify, LPNMHDR lpNMHDR, B
     return DefRet;
 }
 
-void CPathEditorDlg::_TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+VOID CALLBACK CPathEditorDlg::_TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
     UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(dwTime);

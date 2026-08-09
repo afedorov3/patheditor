@@ -71,7 +71,7 @@ private:
     using ListViewNotify  = std::function<BOOL(CPathEditorDlg&, CPathListCtrl&, LPNMHDR)>;
     BOOL _ListViewDispatch(ListViewNotify Notify, LPNMHDR lpNMHDR, BOOL DefRet = FALSE);
 
-    static void _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
+    static VOID CALLBACK _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 public:
     CPathEditorDlg();
