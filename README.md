@@ -8,7 +8,7 @@ The default environment editor is not great at editing PATH if there are lot of 
 * To edit System PATH, offers to be launched with elevated admin privilege, similar to "Run as Administrator"
 * Double clicking any path entry attempts to open in Windows Explorer.
 
-![picture](http://farm6.staticflickr.com/5528/9216019339_ea67407001_z.jpg)
+![picture](PathEditor.png)
 
 ## Extended version features
 * Window resizing
@@ -16,6 +16,7 @@ The default environment editor is not great at editing PATH if there are lot of 
 * Insert after selected (Shift+Add)
 * Clipboard operations
 * Manual in-place edit
+* Modern pick folder dialog
 * Hotkeys:
   | Hotkeys            | Action            |
   |--------------------|-------------------|
