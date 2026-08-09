@@ -68,10 +68,12 @@ public:
     BOOL OnEndLabelEdit(NMLVDISPINFO *pDispInfo);
 
     void Resize(LONG w, LONG h, bool redraw = false) {
-        CDlgCtrl::Resize(w, h, redraw); _AdjustColumnWidth();
+        CDlgCtrl::Resize(w, h, redraw);
+        _AdjustColumnWidth();
     };
     void MoveAndResize(LONG x, LONG y, LONG w, LONG h, bool redraw = false) {
-        CDlgCtrl::MoveAndResize(x, y, w, h, redraw); _AdjustColumnWidth();
+        CDlgCtrl::MoveAndResize(x, y, w, h, redraw);
+        _AdjustColumnWidth();
     };
 
     bool IsFailed()   { return m_failed; }

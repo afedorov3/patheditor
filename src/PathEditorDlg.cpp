@@ -239,16 +239,20 @@ void CPathEditorDlg::_StatusMessage(LPCWSTR Text, DWORD Style, UINT Timeout)
     ::SetTimer(m_hWnd, TIMERID_STATUS, Timeout, _TimerProc);
 }
 
-template <typename CbT, typename... Args>
-bool CPathEditorDlg::_ListViewDispatch(CbT&& memberCallback, Args&&... args) {
-    if (m_usrListCtrl.IsFocused())
-        std::invoke(std::forward<CbT>(memberCallback), *this, m_usrListCtrl, std::forward<Args>(args)...);
-    else if (m_sysListCtrl.IsFocused())
-        std::invoke(std::forward<CbT>(memberCallback), *this, m_sysListCtrl, std::forward<Args>(args)...);
-    else
-        return false;
+bool CPathEditorDlg::_ListViewDispatch(ListViewCommand Command) {
+    if      (m_usrListCtrl.IsFocused()) Command(*this, m_usrListCtrl);
+    else if (m_sysListCtrl.IsFocused()) Command(*this, m_sysListCtrl);
+    else return false;
 
     return true;
+}
+
+BOOL CPathEditorDlg::_ListViewDispatch(ListViewNotify Notify, LPNMHDR lpNMHDR, BOOL DefRet)
+{
+    if      (lpNMHDR->idFrom == IDC_LIST_USER)   return Notify(*this, m_usrListCtrl, lpNMHDR);
+    else if (lpNMHDR->idFrom == IDC_LIST_SYSTEM) return Notify(*this, m_sysListCtrl, lpNMHDR);
+
+    return DefRet;
 }
 
 void CPathEditorDlg::_TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
@@ -389,21 +393,6 @@ BOOL CPathEditorDlg::OnSize(UINT uType, UINT width, UINT height)
     return TRUE;
 }
 
-void CPathEditorDlg::OnButtonGainPrivilege()
-{
-    std::wstring strBuffer(MAX_PATH, 0);
-    if (0 == GetModuleFileName(0, &strBuffer[0], static_cast<DWORD>(strBuffer.size())))
-        return;
-
-    SHELLEXECUTEINFO exInfo{ };
-    exInfo.cbSize = sizeof(exInfo);
-    exInfo.lpVerb = L"runas";
-    exInfo.lpFile = strBuffer.c_str();
-    exInfo.nShow = SW_SHOW;
-    if( TRUE == ShellExecuteEx( &exInfo))
-        SendMessage( m_hWnd, WM_CLOSE, 0, 0);
-}
-
 BOOL CPathEditorDlg::OnCommand( UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(uMsg);
@@ -518,66 +507,25 @@ BOOL CPathEditorDlg::OnNotify( LPNMHDR lpNMHDR)
     switch(lpNMHDR->code)
     {
     case NM_DBLCLK:
-        OnListDoubleClick(reinterpret_cast<LPNMITEMACTIVATE>(lpNMHDR));
-        break;
+        return _ListViewDispatch([](auto&, auto &lv, auto lpNMHDR) {
+            lv.OnDoubleClick(reinterpret_cast<LPNMITEMACTIVATE>(lpNMHDR));
+            return FALSE;
+        }, lpNMHDR);
     case LVN_GETDISPINFO:
-        OnListGetDispInfo(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
-        break;
+        return _ListViewDispatch([](auto&, auto &lv, auto lpNMHDR) {
+            lv.OnGetdispinfo(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
+            return FALSE;
+        }, lpNMHDR);
     case LVN_BEGINLABELEDIT:
-        return OnListBeginLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
+        return _ListViewDispatch([](auto&, auto &lv, auto lpNMHDR) {
+            return lv.OnBeginLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
+        }, lpNMHDR, TRUE);
     case LVN_ENDLABELEDIT:
-        return OnListEndLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
+        return _ListViewDispatch([](auto&, auto &lv, auto lpNMHDR) {
+            return lv.OnEndLabelEdit(reinterpret_cast<NMLVDISPINFO*>(lpNMHDR));
+        }, lpNMHDR);
     }
-    return TRUE;
-}
 
-void CPathEditorDlg::OnListGetDispInfo(NMLVDISPINFO *pDispInfo)
-{
-    switch(pDispInfo->hdr.idFrom)
-    {
-    case IDC_LIST_USER:
-        m_usrListCtrl.OnGetdispinfo(pDispInfo);
-        break;
-    case IDC_LIST_SYSTEM:
-        m_sysListCtrl.OnGetdispinfo(pDispInfo);
-        break;
-    }
-}
-
-void CPathEditorDlg::OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate)
-{
-    switch(lpNMItemActivate->hdr.idFrom)
-    {
-    case IDC_LIST_USER:
-        m_usrListCtrl.OnDoubleClick(lpNMItemActivate);
-        break;
-    case IDC_LIST_SYSTEM:
-        m_sysListCtrl.OnDoubleClick(lpNMItemActivate);
-        break;
-    }
-}
-
-BOOL CPathEditorDlg::OnListBeginLabelEdit(NMLVDISPINFO *pDispInfo)
-{
-    switch(pDispInfo->hdr.idFrom)
-    {
-    case IDC_LIST_USER:
-        return m_usrListCtrl.OnBeginLabelEdit(pDispInfo);
-    case IDC_LIST_SYSTEM:
-        return m_sysListCtrl.OnBeginLabelEdit(pDispInfo);
-    }
-    return TRUE;
-}
-
-BOOL CPathEditorDlg::OnListEndLabelEdit(NMLVDISPINFO *pDispInfo)
-{
-    switch(pDispInfo->hdr.idFrom)
-    {
-    case IDC_LIST_USER:
-        return m_usrListCtrl.OnEndLabelEdit(pDispInfo);
-    case IDC_LIST_SYSTEM:
-        return m_sysListCtrl.OnEndLabelEdit(pDispInfo);
-    }
     return FALSE;
 }
 
@@ -599,6 +547,21 @@ BOOL CPathEditorDlg::OnClose()
         return FALSE;
 
     return TRUE;
+}
+
+void CPathEditorDlg::OnButtonGainPrivilege()
+{
+    std::wstring strBuffer(MAX_PATH, 0);
+    if (0 == GetModuleFileName(0, &strBuffer[0], static_cast<DWORD>(strBuffer.size())))
+        return;
+
+    SHELLEXECUTEINFO exInfo{ };
+    exInfo.cbSize = sizeof(exInfo);
+    exInfo.lpVerb = L"runas";
+    exInfo.lpFile = strBuffer.c_str();
+    exInfo.nShow = SW_SHOW;
+    if( TRUE == ShellExecuteEx( &exInfo))
+        SendMessage( m_hWnd, WM_CLOSE, 0, 0);
 }
 
 void CPathEditorDlg::OnCut(CPathListCtrl &ListCtrl)

@@ -66,27 +66,26 @@ private:
     BOOL _Commit();
     void _StatusMessage(LPCWSTR Text, DWORD Style = 0, UINT Timeout = 3000);
 
-    template <typename CbT, typename... Args>
-    bool _ListViewDispatch(CbT&& memberCallback, Args&&... args);
+    using ListViewCommand = std::function<void(CPathEditorDlg&, CPathListCtrl&)>;
+    bool _ListViewDispatch(ListViewCommand Command);
+    using ListViewNotify  = std::function<BOOL(CPathEditorDlg&, CPathListCtrl&, LPNMHDR)>;
+    BOOL _ListViewDispatch(ListViewNotify Notify, LPNMHDR lpNMHDR, BOOL DefRet = FALSE);
 
     static void _TimerProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 public:
     CPathEditorDlg();
     ~CPathEditorDlg();
+    bool AccHit() { bool hit = m_accHit; m_accHit = false; return hit; }
+
     BOOL OnInitDialog( HINSTANCE hInstance, HWND hWnd);
     BOOL OnMinMaxInfo(LPMINMAXINFO mmi);
     BOOL OnSize(UINT uType, UINT width, UINT height);
     BOOL OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam);
-    bool AccHit() { bool hit = m_accHit; m_accHit = false; return hit; }
     BOOL OnNotify(LPNMHDR lpNMHDR);
     BOOL OnOK();
     BOOL OnClose();
     void OnButtonGainPrivilege();
-    void OnListGetDispInfo(NMLVDISPINFO *pDispInfo);
-    void OnListDoubleClick(LPNMITEMACTIVATE lpNMItemActivate);
-    BOOL OnListBeginLabelEdit(NMLVDISPINFO *pDispInfo);
-    BOOL OnListEndLabelEdit(NMLVDISPINFO *pDispInfo);
 
     void OnCut(CPathListCtrl &ListCtrl);
     void OnPaste(CPathListCtrl &ListCtrl);
