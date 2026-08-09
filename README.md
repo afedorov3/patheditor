@@ -62,8 +62,9 @@ Build tools required:
  * Windows SDK
  * MSVC libs
 
-Open Native Tools Command Prompt in the mak directory and run (for x86_64 CPU)
+Open Native Tools Command Prompt in the mak directory and run
+(assuming you have v143 toolset installed and building for Intel/AMD CPU)
 ```
-msbuild /p:Configuration=Release /p:Platform=x64 PathEditor.sln
+msbuild /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 PathEditor.sln
 ```
-The resulting executable will be in mak\bin\Release\x64 directory
+The resulting executable will be in mak\x64\Release directory
