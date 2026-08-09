@@ -31,28 +31,9 @@
 #include "PathListCtrl.h"
 #include "Util.h"
 
-std::wstring CPathListCtrl::_ExpandEnvironmentStrings(const std::wstring& sVar)
-{
-    if (std::wstring::npos == sVar.find(L'%'))
-        return sVar;
-
-    DWORD dwLen = 0;
-    dwLen = ExpandEnvironmentStrings(sVar.c_str(), nullptr, dwLen);
-    if (dwLen == 0)
-        return L"";
-
-    std::wstring strValue(dwLen, 0);
-    dwLen = ExpandEnvironmentStrings(sVar.c_str(), &strValue[0], dwLen);
-    if (dwLen == 0)
-        return L"";
-
-    strValue.resize(strValue.find_first_of(L'\0'));
-    return strValue;
-}
-
 int CPathListCtrl::_GetImageIndex( std::wstring fname)
 {
-    std::wstring pathName = _ExpandEnvironmentStrings(fname);
+    std::wstring pathName = wsExpandEnvironmentStrings(fname);
     return GetFileAttributes(pathName.c_str()) == INVALID_FILE_ATTRIBUTES ? 1 : 0;
 }
 
@@ -176,7 +157,7 @@ void CPathListCtrl::EditPath()
     if( iItem == -1)
         return;
 
-    std::wstring strPath = _ExpandEnvironmentStrings(m_str_list[iItem]);
+    std::wstring strPath = wsExpandEnvironmentStrings(m_str_list[iItem]);
     auto hRes = PickFolderDlg(GetAncestor(m_hWnd, GA_ROOT), strPath, FOS_FORCEFILESYSTEM, strPath, true);
     if( SUCCEEDED(hRes))
     {
@@ -236,7 +217,7 @@ void CPathListCtrl::OnDoubleClick( LPNMITEMACTIVATE lpNMItemActivate)
     if( iItem == -1)
         return;
 
-    std::wstring pathName = _ExpandEnvironmentStrings(m_str_list[iItem]);
+    std::wstring pathName = wsExpandEnvironmentStrings(m_str_list[iItem]);
     if (GetFileAttributes(pathName.c_str()) == INVALID_FILE_ATTRIBUTES)
         return;
     ShellExecute(0, L"open", pathName.c_str(), 0, 0, SW_NORMAL);

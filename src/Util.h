@@ -32,6 +32,7 @@
 // pair.first  indicates elevated admin
 // pair.second indicates non-elevated admin
 bool IsProcessAdmin( HANDLE hProcess);
+std::wstring wsExpandEnvironmentStrings(const std::wstring& sVar);
 bool Str2Clipboard( const std::wstring &Str);
 bool Clipboard2Str( std::wstring &Str);
 bool IsAbsoluteLocalPathValid( const std::wstring &Path);

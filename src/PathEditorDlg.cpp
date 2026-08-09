@@ -586,7 +586,8 @@ void CPathEditorDlg::OnPaste(CPathListCtrl &ListCtrl)
         MessageBox(m_hWnd, L"The path you're trying to paste is too long", L"Path Editor", MB_ICONERROR | MB_OK);
         return;
     }
-    if (!IsAbsoluteLocalPathValid(Str))
+    std::wstring ExpStr = wsExpandEnvironmentStrings(Str);
+    if (!IsAbsoluteLocalPathValid(ExpStr))
     {
         std::wstring req(L"The path doesn't seem to be a valid absolute local path:\n");
         req += Str;

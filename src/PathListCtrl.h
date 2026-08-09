@@ -44,7 +44,6 @@ private:
     bool m_modified;
 
 private:
-    std::wstring _ExpandEnvironmentStrings(const std::wstring& sVar);
     int _GetImageIndex( std::wstring fname);
     bool _LoadData();
     void _AdjustColumnWidth();

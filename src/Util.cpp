@@ -84,6 +84,25 @@ bool IsProcessAdmin( HANDLE hProcess)
     return isMember == TRUE;
 }
 
+std::wstring wsExpandEnvironmentStrings(const std::wstring& sVar)
+{
+    if (std::wstring::npos == sVar.find(L'%'))
+        return sVar;
+
+    DWORD dwLen = 0;
+    dwLen = ExpandEnvironmentStrings(sVar.c_str(), nullptr, dwLen);
+    if (dwLen == 0)
+        return L"";
+
+    std::wstring strValue(dwLen, 0);
+    dwLen = ExpandEnvironmentStrings(sVar.c_str(), &strValue[0], dwLen);
+    if (dwLen == 0)
+        return L"";
+
+    strValue.resize(strValue.find_first_of(L'\0'));
+    return strValue;
+}
+
 bool Str2Clipboard( const std::wstring &Str)
 {
     SIZE_T iLen = wcslen(Str.c_str());
