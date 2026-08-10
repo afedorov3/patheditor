@@ -469,11 +469,13 @@ BOOL CPathEditorDlg::OnCommand( UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     case ID_ACC_APPLY:
         m_accHit = TRUE;
+        /* fall through */
     case IDC_BUTTON_APPLY:
         if (_Commit()) _StatusMessage(L"Applied", SS_RIGHT);
         break;
     case ID_ACC_REFRESH:
         m_accHit = TRUE;
+        /* fall through */
     case IDC_BUTTON_REFRESH:
         if (_Reload()) _StatusMessage(L"Reloaded", SS_LEFT);
         break;

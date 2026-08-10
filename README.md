@@ -38,9 +38,9 @@ The default environment editor is not great at editing PATH if there are lot of 
 ## Building from source
 ### CMake build
 Build tools required:  
- * Clang / MSVC C++ compiler (GCC is not supported)
- * Windows SDK
- * MSVC libs
+ * Clang | GCC/MinGW | MSVC C++ compiler
+ * Windows SDK (Clang, MSVC)
+ * MSVC libs   (Clang, MSVC)
  * CMake
  * Ninja
 
@@ -58,11 +58,11 @@ cmake --install will put the resulting executable into the mak\bin directory
 
 ### MS Build tools
 Build tools required:  
- * MS C++ Build Tools (or complete MS Visual Studio)
+ * MS C++ Build Tools | MS Visual Studio
  * Windows SDK
  * MSVC libs
 
-Open Native Tools Command Prompt in the mak directory and run
+Open Native Tools Command Prompt in the mak directory and run:  
 (assuming you have v143 toolset installed and building for Intel/AMD CPU)
 ```
 msbuild /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 PathEditor.sln

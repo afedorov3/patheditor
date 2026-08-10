@@ -26,7 +26,7 @@
 
 #include <windows.h>
 #include <utility>
-#include <shobjidl_core.h>
+#include <shobjidl.h>
 
 // Check if current process has admin access
 // pair.first  indicates elevated admin

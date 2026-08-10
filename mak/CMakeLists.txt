@@ -9,20 +9,25 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR})
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 add_executable(PathEditor WIN32 
-    ../src/DlgCtrl.hpp
     ../src/PathEditor.cpp
-    ../src/PathEditor.manifest
-    ../src/PathEditor.rc
     ../src/PathEditorDlg.cpp
     ../src/PathListCtrl.cpp
     ../src/PathReader.cpp
     ../src/Util.cpp
+    ../src/PathEditor.manifest
+    ../src/PathEditor.rc
 )
 
 target_include_directories(PathEditor PRIVATE ../src)
 target_compile_definitions(PathEditor PRIVATE UNICODE _UNICODE PICKFOLDER_FALLBACK)
 target_compile_options(PathEditor PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:  /W4  >
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:  -Wall -Wextra  >
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:  -Wall -Wextra -Wno-unknown-pragmas  >
 )
+target_link_options(PathEditor PRIVATE
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:  -municode  >
+    $<$<CXX_COMPILER_ID:GNU>:  -static-libgcc -static-libstdc++  >
+)
+target_link_libraries(PathEditor PRIVATE comctl32)
+
 install(TARGETS PathEditor)

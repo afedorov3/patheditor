@@ -205,7 +205,7 @@ bool IsAbsoluteLocalPathValid( const std::wstring &Path)
 }
 
 #ifdef PICKFOLDER_FALLBACK
-#include <shlobj_core.h>
+#include <shlobj.h>
 
 #pragma comment(lib, "ComDlg32.Lib")
 
